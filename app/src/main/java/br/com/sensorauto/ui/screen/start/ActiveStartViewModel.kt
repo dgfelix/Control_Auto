@@ -1,0 +1,239 @@
+package br.com.sensorauto.ui.screen.start
+
+import android.annotation.SuppressLint
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.BatteryManager
+import android.os.SystemClock
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import br.com.sensorauto.data.local.csv.SensorCsvWriter
+import br.com.sensorauto.domain.model.Recording
+import br.com.sensorauto.domain.repository.ConfigRepository
+import br.com.sensorauto.domain.usecase.SaveRecordingUseCase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+
+private const val MAX_SAMPLES = 300
+private const val TIMER_INTERVAL_MS = 50L
+private const val BATTERY_POLL_MS = 10_000L
+
+class ActiveStartViewModel(
+    private val sensorManager: SensorManager,
+    private val locationManager: LocationManager,
+    private val batteryManager: BatteryManager,
+    private val configRepository: ConfigRepository,
+    private val saveRecording: SaveRecordingUseCase,
+    private val csvWriter: SensorCsvWriter
+) : ViewModel(), SensorEventListener, LocationListener {
+
+    private val _uiState = MutableStateFlow(StartUiState())
+    val uiState: StateFlow<StartUiState> = _uiState.asStateFlow()
+
+    private var timerJob: Job? = null
+    private var batteryJob: Job? = null
+    private var lastLocation: Location? = null
+    private var sessionCounter = 1
+    private var deviceId: String = ""
+
+    private val accelBuffer = ArrayDeque<FloatArray>(MAX_SAMPLES)
+    private val gyroBuffer  = ArrayDeque<FloatArray>(MAX_SAMPLES)
+
+    init {
+        // Sensores sempre ativos para mostrar dados mesmo sem sessão iniciada
+        registerSensors()
+        startBatteryPolling()
+        viewModelScope.launch {
+            val config = configRepository.load()
+            deviceId = "${config.deviceBrand} ${config.deviceModel}".trim()
+        }
+    }
+
+    fun startSession(hasLocationPermission: Boolean = false) {
+        val d = LocalDate.now()
+        val name = "%02d%02d%04d-start-%02d".format(d.dayOfMonth, d.monthValue, d.year, sessionCounter)
+        val startMs = System.currentTimeMillis()
+        _uiState.update {
+            it.copy(
+                sessionName = name,
+                status = StartStatus.RUNNING,
+                elapsedMs = 0L,
+                distanceKm = 0f,
+                speedKmh = 0f,
+                maxSpeedKmh = 0f,
+                dataPoints = 0,
+                sessionStartMs = startMs,
+                totalSpeedSum = 0f,
+                speedReadings = 0
+            )
+        }
+        csvWriter.openSession(name)
+        startTimer()
+        if (hasLocationPermission) requestLocation()
+    }
+
+    fun pauseSession() {
+        _uiState.update { it.copy(status = StartStatus.PAUSED) }
+        timerJob?.cancel()
+    }
+
+    fun resumeSession() {
+        _uiState.update { it.copy(status = StartStatus.RUNNING) }
+        startTimer()
+    }
+
+    fun stopSession() {
+        timerJob?.cancel()
+        locationManager.removeUpdates(this)
+        lastLocation = null
+
+        val state = _uiState.value
+        if (state.sessionName.isNotEmpty()) {
+            val avgSpeed = if (state.speedReadings > 0)
+                state.totalSpeedSum / state.speedReadings else 0f
+
+            viewModelScope.launch {
+                saveRecording(
+                    Recording(
+                        id          = 0,
+                        name        = state.sessionName,
+                        dateMillis  = state.sessionStartMs,
+                        distanceKm  = state.distanceKm,
+                        durationMs  = state.elapsedMs,
+                        avgSpeedKmh = avgSpeed,
+                        maxSpeedKmh = state.maxSpeedKmh,
+                        dataPoints  = state.dataPoints,
+                        deviceId    = deviceId
+                    )
+                )
+            }
+        }
+        csvWriter.closeSession()
+        sessionCounter++
+        _uiState.update {
+            it.copy(
+                sessionName = "",
+                status = StartStatus.IDLE,
+                elapsedMs = 0L,
+                distanceKm = 0f,
+                speedKmh = 0f,
+                maxSpeedKmh = 0f,
+                dataPoints = 0,
+                sessionStartMs = 0L,
+                totalSpeedSum = 0f,
+                speedReadings = 0
+            )
+        }
+    }
+
+    private fun startTimer() {
+        timerJob = viewModelScope.launch {
+            while (isActive) {
+                delay(TIMER_INTERVAL_MS)
+                _uiState.update { it.copy(elapsedMs = it.elapsedMs + TIMER_INTERVAL_MS) }
+            }
+        }
+    }
+
+    private fun startBatteryPolling() {
+        batteryJob = viewModelScope.launch {
+            while (isActive) {
+                val pct = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                _uiState.update { it.copy(batteryPercent = pct) }
+                delay(BATTERY_POLL_MS)
+            }
+        }
+    }
+
+    private fun registerSensors() {
+        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
+        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        val ts = System.currentTimeMillis()
+        val sample = floatArrayOf(event.values[0], event.values[1], event.values[2])
+        val isRecording = _uiState.value.status == StartStatus.RUNNING
+
+        when (event.sensor.type) {
+            Sensor.TYPE_ACCELEROMETER -> {
+                pushSample(accelBuffer, sample) { copy(accelSamples = accelBuffer.toList()) }
+                if (isRecording) {
+                    csvWriter.writeAccel(ts, sample[0], sample[1], sample[2])
+                    _uiState.update { it.copy(dataPoints = it.dataPoints + 1) }
+                }
+            }
+            Sensor.TYPE_GYROSCOPE -> {
+                pushSample(gyroBuffer, sample) { copy(gyroSamples = gyroBuffer.toList()) }
+                if (isRecording) {
+                    csvWriter.writeGyro(ts, sample[0], sample[1], sample[2])
+                }
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
+
+    private fun pushSample(
+        buffer: ArrayDeque<FloatArray>,
+        sample: FloatArray,
+        update: StartUiState.() -> StartUiState
+    ) {
+        if (buffer.size >= MAX_SAMPLES) buffer.removeFirst()
+        buffer.addLast(sample)
+        _uiState.update { it.update() }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun requestLocation() {
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
+        }
+    }
+
+    override fun onLocationChanged(location: Location) {
+        val prev = lastLocation
+        val addedKm = if (prev != null) prev.distanceTo(location) / 1000f else 0f
+        lastLocation = location
+        val speedKmh = location.speed * 3.6f
+        val ts = System.currentTimeMillis()
+
+        if (_uiState.value.status == StartStatus.RUNNING) {
+            csvWriter.writeGps(ts, location.latitude, location.longitude, speedKmh)
+        }
+
+        _uiState.update {
+            it.copy(
+                distanceKm   = it.distanceKm + addedKm,
+                speedKmh     = speedKmh,
+                maxSpeedKmh  = maxOf(it.maxSpeedKmh, speedKmh),
+                totalSpeedSum = it.totalSpeedSum + speedKmh,
+                speedReadings = it.speedReadings + 1
+            )
+        }
+    }
+
+    override fun onCleared() {
+        timerJob?.cancel()
+        batteryJob?.cancel()
+        sensorManager.unregisterListener(this)
+        locationManager.removeUpdates(this)
+        csvWriter.closeSession()
+    }
+}
