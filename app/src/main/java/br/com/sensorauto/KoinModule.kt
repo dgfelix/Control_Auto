@@ -20,6 +20,9 @@ import br.com.sensorauto.ui.screen.config.sensors.SensorConfigViewModel
 import br.com.sensorauto.ui.screen.files.RecordingDetailViewModel
 import br.com.sensorauto.ui.screen.files.RecordingHistoryViewModel
 import br.com.sensorauto.ui.screen.start.ActiveStartViewModel
+import br.com.sensorauto.domain.usecase.ComputeOrientationUseCase
+import br.com.sensorauto.ui.screen.config.bubble.BubbleLevelScreen
+import br.com.sensorauto.ui.screen.config.bubble.BubbleLevelViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -45,6 +48,8 @@ val appModule = module {
     factory { SaveRecordingUseCase(get()) }
     factory { ObserveRecordingsUseCase(get()) }
     factory { DeleteRecordingUseCase(get()) }
+    factory { ComputeOrientationUseCase() }
+    viewModel { BubbleLevelViewModel(get(), get(), get()) }
     viewModel { EquipmentConfigViewModel(get(), get()) }
     viewModel { SensorConfigViewModel(get(), get(), get()) }
     viewModel { ActiveStartViewModel(get(), get(), get(), get(), get(), get()) }

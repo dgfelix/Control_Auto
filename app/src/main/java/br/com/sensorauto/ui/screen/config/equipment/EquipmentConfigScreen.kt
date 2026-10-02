@@ -15,8 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Sync
@@ -72,7 +70,7 @@ fun EquipmentConfigScreen(
             )
         }
 
-        SectionCard(title = "Veículo & Suporte", icon = Icons.Default.DirectionsCar) {
+        SectionCard(title = "Veículo & Suporte", content = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = config.vehicleBrand,
@@ -165,11 +163,10 @@ fun EquipmentConfigScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
-        }
+        })
 
         SectionCard(
             title = "Dispositivo Móvel",
-            icon = Icons.Default.PhoneAndroid,
             headerAction = {
                 TextButton(onClick = viewModel::autoDetectDevice) {
                     Icon(
@@ -180,34 +177,35 @@ fun EquipmentConfigScreen(
                     Spacer(Modifier.width(4.dp))
                     Text("Auto-Detect", style = MaterialTheme.typography.labelSmall)
                 }
-            }
-        ) {
-            OutlinedTextField(
-                value = config.deviceBrand,
-                onValueChange = viewModel::updateDeviceBrand,
-                label = { Text("Marca") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            },
+            content = {
                 OutlinedTextField(
-                    value = config.deviceModel,
-                    onValueChange = viewModel::updateDeviceModel,
-                    label = { Text("Modelo") },
-                    modifier = Modifier.weight(1f),
+                    value = config.deviceBrand,
+                    onValueChange = viewModel::updateDeviceBrand,
+                    label = { Text("Marca") },
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                OutlinedTextField(
-                    value = config.deviceYear,
-                    onValueChange = viewModel::updateDeviceYear,
-                    label = { Text("Ano") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
-                )
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = config.deviceModel,
+                        onValueChange = viewModel::updateDeviceModel,
+                        label = { Text("Modelo") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = config.deviceYear,
+                        onValueChange = viewModel::updateDeviceYear,
+                        label = { Text("Ano") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                }
             }
-        }
+        )
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Button(

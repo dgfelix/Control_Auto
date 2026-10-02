@@ -16,14 +16,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun SectionCard(
     title: String,
-    icon: ImageVector,
     modifier: Modifier = Modifier,
     headerAction: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
@@ -38,11 +36,6 @@ fun SectionCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = title,

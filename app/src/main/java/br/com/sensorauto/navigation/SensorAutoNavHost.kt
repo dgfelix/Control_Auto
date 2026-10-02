@@ -35,6 +35,7 @@ import br.com.sensorauto.ui.screen.files.RecordingDetailScreen
 import br.com.sensorauto.ui.screen.files.RecordingFilesScreen
 import br.com.sensorauto.ui.screen.files.SessionFilesScreen
 import br.com.sensorauto.ui.screen.start.ActiveStartScreen
+import br.com.sensorauto.ui.screen.config.bubble.BubbleLevelScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,6 +104,12 @@ fun SensorAutoNavHost() {
             }
             composable<Screen.SensorConfig> {
                 SensorConfigScreen(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToBubbleLevel = { navController.navigate(Screen.BubbleLevel) }
+                )
+            }
+            composable<Screen.BubbleLevel> {
+                BubbleLevelScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
