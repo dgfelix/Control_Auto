@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
@@ -30,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.com.sensorauto.domain.model.SensorType
 import br.com.sensorauto.ui.components.OutlineButton
 import br.com.sensorauto.ui.components.PrimaryButton
 import br.com.sensorauto.ui.components.SectionCard
@@ -43,6 +40,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SensorConfigScreen(
     onBack: () -> Unit,
+    onNavigateToBubbleLevel: () -> Unit,
     viewModel: SensorConfigViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -63,7 +61,7 @@ fun SensorConfigScreen(
             )
 
             state.sensors.forEach { item ->
-                SectionCard(title = item.label, icon = Icons.Default.Sensors) {
+                SectionCard(title = item.label, content = {
                     Text(
                         text = item.description,
                         style = MaterialTheme.typography.bodyMedium,
@@ -102,12 +100,12 @@ fun SensorConfigScreen(
                             )
                         }
                     }
-                }
+                })
             }
 
             OutlineButton(
                 text = "Calibrar Nível",
-                onClick = { /* fase futura: abre BubbleLevelScreen */ }
+                onClick = onNavigateToBubbleLevel
             )
 
             PrimaryButton(
