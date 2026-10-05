@@ -1,4 +1,4 @@
-package br.com.sensorauto.ui.screen.config.sensors
+    package br.com.sensorauto.ui.screen.config.sensors
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

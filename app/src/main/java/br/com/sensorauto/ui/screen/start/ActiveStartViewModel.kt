@@ -9,10 +9,11 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.BatteryManager
-import android.os.SystemClock
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.sensorauto.data.local.csv.SensorCsvWriter
+import br.com.sensorauto.domain.model.AppConfig
 import br.com.sensorauto.domain.model.Recording
 import br.com.sensorauto.domain.repository.ConfigRepository
 import br.com.sensorauto.domain.usecase.SaveRecordingUseCase
@@ -47,41 +48,55 @@ class ActiveStartViewModel(
     private var lastLocation: Location? = null
     private var sessionCounter = 1
     private var deviceId: String = ""
+    private var activeConfig: AppConfig? = null
 
     private val accelBuffer = ArrayDeque<FloatArray>(MAX_SAMPLES)
     private val gyroBuffer  = ArrayDeque<FloatArray>(MAX_SAMPLES)
 
     init {
-        // Sensores sempre ativos para mostrar dados mesmo sem sessão iniciada
+        // Sensores em modo preview (Hz padrão UI)
         registerSensors()
         startBatteryPolling()
         viewModelScope.launch {
             val config = configRepository.load()
-            deviceId = "${config.deviceBrand} ${config.deviceModel}".trim()
+            deviceId = if (config.deviceBrand.isEmpty()) {
+                "${Build.MANUFACTURER} ${Build.MODEL}".trim()
+            } else {
+                "${config.deviceBrand} ${config.deviceModel}".trim()
+            }
         }
     }
 
     fun startSession(hasLocationPermission: Boolean = false) {
-        val d = LocalDate.now()
-        val name = "%02d%02d%04d-start-%02d".format(d.dayOfMonth, d.monthValue, d.year, sessionCounter)
-        val startMs = System.currentTimeMillis()
-        _uiState.update {
-            it.copy(
-                sessionName = name,
-                status = StartStatus.RUNNING,
-                elapsedMs = 0L,
-                distanceKm = 0f,
-                speedKmh = 0f,
-                maxSpeedKmh = 0f,
-                dataPoints = 0,
-                sessionStartMs = startMs,
-                totalSpeedSum = 0f,
-                speedReadings = 0
-            )
+        viewModelScope.launch {
+            val config = configRepository.load()
+            activeConfig = config
+            
+            // Re-registra sensores com a frequência e habilitados do usuário
+            registerSensors(config)
+            
+            val d = LocalDate.now()
+            val name = "%02d%02d%04d-start-%02d".format(d.dayOfMonth, d.monthValue, d.year, sessionCounter)
+            val startMs = System.currentTimeMillis()
+            
+            _uiState.update {
+                it.copy(
+                    sessionName = name,
+                    status = StartStatus.RUNNING,
+                    elapsedMs = 0L,
+                    distanceKm = 0f,
+                    speedKmh = 0f,
+                    maxSpeedKmh = 0f,
+                    dataPoints = 0,
+                    sessionStartMs = startMs,
+                    totalSpeedSum = 0f,
+                    speedReadings = 0
+                )
+            }
+            csvWriter.openSession(name, config)
+            startTimer()
+            if (hasLocationPermission) requestLocation(config)
         }
-        csvWriter.openSession(name)
-        startTimer()
-        if (hasLocationPermission) requestLocation()
     }
 
     fun pauseSession() {
@@ -121,7 +136,12 @@ class ActiveStartViewModel(
             }
         }
         csvWriter.closeSession()
+        activeConfig = null
         sessionCounter++
+        
+        // Retorna sensores para modo preview (UI)
+        registerSensors()
+        
         _uiState.update {
             it.copy(
                 sessionName = "",
@@ -157,12 +177,25 @@ class ActiveStartViewModel(
         }
     }
 
-    private fun registerSensors() {
-        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+    private fun registerSensors(config: AppConfig? = null) {
+        sensorManager.unregisterListener(this)
+        
+        // Se config for null, estamos em modo PREVIEW (Hz da UI, todos ativos)
+        val accelDelay = if (config != null) 1_000_000 / config.accelHz else SensorManager.SENSOR_DELAY_UI
+        val gyroDelay = if (config != null) 1_000_000 / config.gyroHz else SensorManager.SENSOR_DELAY_UI
+        
+        val accelEnabled = config?.accelEnabled ?: true
+        val gyroEnabled = config?.gyroEnabled ?: true
+
+        if (accelEnabled) {
+            sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let {
+                sensorManager.registerListener(this, it, accelDelay)
+            }
         }
-        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        if (gyroEnabled) {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)?.let {
+                sensorManager.registerListener(this, it, gyroDelay)
+            }
         }
     }
 
@@ -174,14 +207,15 @@ class ActiveStartViewModel(
         when (event.sensor.type) {
             Sensor.TYPE_ACCELEROMETER -> {
                 pushSample(accelBuffer, sample) { copy(accelSamples = accelBuffer.toList()) }
-                if (isRecording) {
+                // Só grava se estiver rodando E o sensor estiver habilitado na config ativa
+                if (isRecording && (activeConfig?.accelEnabled != false)) {
                     csvWriter.writeAccel(ts, sample[0], sample[1], sample[2])
                     _uiState.update { it.copy(dataPoints = it.dataPoints + 1) }
                 }
             }
             Sensor.TYPE_GYROSCOPE -> {
                 pushSample(gyroBuffer, sample) { copy(gyroSamples = gyroBuffer.toList()) }
-                if (isRecording) {
+                if (isRecording && (activeConfig?.gyroEnabled != false)) {
                     csvWriter.writeGyro(ts, sample[0], sample[1], sample[2])
                 }
             }
@@ -201,9 +235,14 @@ class ActiveStartViewModel(
     }
 
     @SuppressLint("MissingPermission")
-    private fun requestLocation() {
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
+    private fun requestLocation(config: AppConfig? = null) {
+        locationManager.removeUpdates(this)
+        
+        val enabled = config?.gpsEnabled ?: true
+        if (enabled && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            // Converte Hz para milissegundos
+            val interval = if (config != null) (1000 / config.gpsHz).toLong() else 1000L
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, interval, 0f, this)
         }
     }
 
@@ -214,7 +253,8 @@ class ActiveStartViewModel(
         val speedKmh = location.speed * 3.6f
         val ts = System.currentTimeMillis()
 
-        if (_uiState.value.status == StartStatus.RUNNING) {
+        // Só grava no CSV se o GPS estiver habilitado na config da sessão
+        if (_uiState.value.status == StartStatus.RUNNING && (activeConfig?.gpsEnabled != false)) {
             csvWriter.writeGps(ts, location.latitude, location.longitude, speedKmh)
         }
 

@@ -1,6 +1,7 @@
 package br.com.sensorauto.data.local.csv
 
 import android.content.Context
+import br.com.sensorauto.domain.model.AppConfig
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -13,22 +14,31 @@ class SensorCsvWriter(private val context: Context) {
     var sessionDir: File? = null
         private set
 
-    fun openSession(sessionName: String) {
+    fun openSession(sessionName: String, config: AppConfig) {
         val dir = File(context.filesDir, "sessions/$sessionName").also {
             it.mkdirs()
             sessionDir = it
         }
-        accelWriter = BufferedWriter(FileWriter(File(dir, "acelerometro.csv"))).also {
-            it.write("timestamp_ms,x,y,z")
-            it.newLine()
+        
+        if (config.accelEnabled) {
+            accelWriter = BufferedWriter(FileWriter(File(dir, "acelerometro.csv"))).also {
+                it.write("timestamp_ms,x,y,z")
+                it.newLine()
+            }
         }
-        gyroWriter = BufferedWriter(FileWriter(File(dir, "giroscopio.csv"))).also {
-            it.write("timestamp_ms,x,y,z")
-            it.newLine()
+        
+        if (config.gyroEnabled) {
+            gyroWriter = BufferedWriter(FileWriter(File(dir, "giroscopio.csv"))).also {
+                it.write("timestamp_ms,x,y,z")
+                it.newLine()
+            }
         }
-        gpsWriter = BufferedWriter(FileWriter(File(dir, "gps.csv"))).also {
-            it.write("timestamp_ms,lat,lon,speed_kmh")
-            it.newLine()
+        
+        if (config.gpsEnabled) {
+            gpsWriter = BufferedWriter(FileWriter(File(dir, "gps.csv"))).also {
+                it.write("timestamp_ms,lat,lon,speed_kmh")
+                it.newLine()
+            }
         }
     }
 

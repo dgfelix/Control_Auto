@@ -3,7 +3,6 @@ package br.com.sensorauto.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -16,8 +15,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -33,7 +32,6 @@ import br.com.sensorauto.ui.screen.config.equipment.EquipmentConfigScreen
 import br.com.sensorauto.ui.screen.config.sensors.SensorConfigScreen
 import br.com.sensorauto.ui.screen.files.RecordingDetailScreen
 import br.com.sensorauto.ui.screen.files.RecordingFilesScreen
-import br.com.sensorauto.ui.screen.files.SessionFilesScreen
 import br.com.sensorauto.ui.screen.start.ActiveStartScreen
 import br.com.sensorauto.ui.screen.config.bubble.BubbleLevelScreen
 
@@ -45,11 +43,10 @@ fun SensorAutoNavHost() {
     val currentDestination = navBackStackEntry?.destination
 
     val bottomItems = listOf(
-        BottomNavItem("Start",       Icons.Default.RadioButtonChecked, Screen.ActiveSession),
-        BottomNavItem("Equipamento", Icons.Default.DirectionsCar,      Screen.EquipmentConfig),
+        BottomNavItem("Iniciar",     Icons.Default.RadioButtonChecked, Screen.ActiveSession),
+        BottomNavItem("Veículo",     Icons.Default.DirectionsCar,      Screen.EquipmentConfig),
         BottomNavItem("Sensores",    Icons.Default.Sensors,            Screen.SensorConfig),
-        BottomNavItem("Gravações",   Icons.Default.VideoLibrary,       Screen.RecordingFiles),
-        BottomNavItem("Arquivos",    Icons.Default.FolderOpen,         Screen.SessionFiles),
+        BottomNavItem("Histórico",   Icons.Default.VideoLibrary,       Screen.RecordingFiles),
     )
 
     Scaffold(
@@ -127,9 +124,6 @@ fun SensorAutoNavHost() {
                     recordingName = route.name,
                     onBack = { navController.popBackStack() }
                 )
-            }
-            composable<Screen.SessionFiles> {
-                SessionFilesScreen()
             }
         }
     }

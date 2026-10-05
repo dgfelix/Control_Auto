@@ -258,7 +258,7 @@ private fun RecordingCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        StatCard("Pontos", "%,d".format(recording.dataPoints), Modifier.weight(1f))
+                        StatCard("Amostras", "%,d".format(recording.dataPoints), Modifier.weight(1f))
                         StatCard("Dispositivo", recording.deviceId.ifEmpty { "—" }, Modifier.weight(1f))
                     }
 
