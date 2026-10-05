@@ -8,6 +8,5 @@ sealed class Screen {
     @Serializable data object SensorConfig    : Screen()
     @Serializable data object BubbleLevel : Screen()
     @Serializable data object RecordingFiles  : Screen()
-    @Serializable data object SessionFiles    : Screen()
     @Serializable data class  RecordingDetail(val id: Long, val name: String) : Screen()
 }

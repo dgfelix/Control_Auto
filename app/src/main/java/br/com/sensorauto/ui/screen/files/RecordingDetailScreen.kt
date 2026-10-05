@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -40,18 +41,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private data class SensorFileEntry(
-    val icon: ImageVector,
-    val sensorName: String,
-    val fileName: String
-)
-
-private val SENSOR_FILES = listOf(
-    SensorFileEntry(Icons.Default.Sensors,  "Acelerômetro", "acelerometro.csv"),
-    SensorFileEntry(Icons.Default.Speed,    "Giroscópio",   "giroscopio.csv"),
-    SensorFileEntry(Icons.Default.GpsFixed, "GPS",          "gps.csv")
-)
-
 @Composable
 fun RecordingDetailScreen(
     recordingId: Long,
@@ -60,6 +49,7 @@ fun RecordingDetailScreen(
     viewModel: RecordingDetailViewModel = koinViewModel(parameters = { parametersOf(recordingId) })
 ) {
     val recording by viewModel.recording.collectAsState()
+    val files by viewModel.files.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -101,13 +91,27 @@ fun RecordingDetailScreen(
 
             item {
                 Text(
-                    text = "ARQUIVOS POR SENSOR",
+                    text = "ARQUIVOS DA SESSÃO",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
-            items(SENSOR_FILES) { entry -> SensorFileCard(entry) }
+
+            if (files.isEmpty()) {
+                item {
+                    Text(
+                        text = "Nenhum arquivo encontrado para esta sessão.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            } else {
+                items(files) { file ->
+                    SensorFileCard(file, onClick = { viewModel.shareFile(file) })
+                }
+            }
         }
     }
 }
@@ -178,8 +182,23 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
 }
 
 @Composable
-private fun SensorFileCard(entry: SensorFileEntry) {
+private fun SensorFileCard(file: RecordingFile, onClick: () -> Unit) {
+    val icon = when {
+        file.name.contains("acelerometro") -> Icons.Default.Sensors
+        file.name.contains("giroscopio") -> Icons.Default.Speed
+        file.name.contains("gps") -> Icons.Default.GpsFixed
+        else -> Icons.Default.Description
+    }
+
+    val sensorDisplayName = when {
+        file.name.contains("acelerometro") -> "Acelerômetro"
+        file.name.contains("giroscopio") -> "Giroscópio"
+        file.name.contains("gps") -> "GPS"
+        else -> file.name
+    }
+
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -191,24 +210,35 @@ private fun SensorFileCard(entry: SensorFileEntry) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = entry.icon,
+                imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(entry.sensorName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                Text(entry.fileName, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(sensorDisplayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                Text(
+                    text = "${file.name} • ${file.sizeBytes.toReadableSize()}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Icon(
-                imageVector = Icons.Default.Description,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                imageVector = Icons.Default.Share,
+                contentDescription = "Compartilhar",
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
         }
     }
+}
+
+private fun Long.toReadableSize(): String {
+    if (this <= 0) return "0 B"
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    val digitGroups = (Math.log10(this.toDouble()) / Math.log10(1024.0)).toInt()
+    return "%.1f %s".format(this / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
 }
 
 private fun Long.toDateString(): String =
