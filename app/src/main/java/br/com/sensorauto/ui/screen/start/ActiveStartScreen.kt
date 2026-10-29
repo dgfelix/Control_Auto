@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.Cached
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Route
@@ -39,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +54,14 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import br.com.sensorauto.ui.components.SensorChart
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -197,6 +208,11 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
             }
         }
 
+        val accelColors = listOf(Color(0xFFF5A623), Color(0xFFEB5757), Color(0xFF27AE60))
+        val gyroColors  = listOf(Color(0xFF00658A), Color(0xFF27AE60), Color(0xFF9C27B0))
+        val lastAccel   = state.accelSamples.lastOrNull()
+        val lastGyro    = state.gyroSamples.lastOrNull()
+
         Surface(
             shape = MaterialTheme.shapes.large,
             tonalElevation = 1.dp,
@@ -204,37 +220,70 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
         ) {
             Column {
                 SensorChart(
-                    title = "Dinâmica (Acelerômetro)",
+                    title = "Acelerômetro",
                     icon = Icons.Default.StackedLineChart,
-                    badge = "X / Y / Z",
                     series = listOf(
                         state.accelSamples.map { it[0] },
                         state.accelSamples.map { it[1] },
                         state.accelSamples.map { it[2] }
                     ),
-                    seriesColors = listOf(
-                        Color(0xFFF5A623),
-                        Color(0xFFEB5757),
-                        Color(0xFF27AE60)
-                    )
+                    seriesColors = accelColors,
+                    yRange = -20f..20f,
+                    axisLabels = listOf("X", "Y", "Z"),
+                    axisValues = lastAccel?.toList(),
+                    axisUnit = "m/s²"
                 )
 
                 HorizontalDivider()
 
                 SensorChart(
-                    title = "Rotação (Giroscópio)",
+                    title = "Giroscópio",
                     icon = Icons.Default.Cached,
-                    badge = "Roll / Pitch / Yaw",
                     series = listOf(
                         state.gyroSamples.map { it[0] },
                         state.gyroSamples.map { it[1] },
                         state.gyroSamples.map { it[2] }
                     ),
-                    seriesColors = listOf(
-                        Color(0xFF00658A),
-                        Color(0xFF27AE60),
-                        Color(0xFF9C27B0)
+                    seriesColors = gyroColors,
+                    yRange = -10f..10f,
+                    axisLabels = listOf("Roll", "Pitch", "Yaw"),
+                    axisValues = lastGyro?.toList(),
+                    axisUnit = "rad/s"
+                )
+            }
+        }
+
+        // Card do Mapa
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = 1.dp,
+            shadowElevation = 2.dp
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Map,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "TRAJETO",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                TrailMap(
+                    trail = state.locationTrail,
+                    lastLat = state.lastLat,
+                    lastLng = state.lastLng
                 )
             }
         }
@@ -381,6 +430,52 @@ private fun CellDivider() {
             .padding(vertical = 8.dp),
         color = MaterialTheme.colorScheme.outlineVariant
     ) {}
+}
+
+@Composable
+private fun TrailMap(
+    trail: List<Pair<Double, Double>>,
+    lastLat: Double?,
+    lastLng: Double?
+) {
+    val defaultPosition = LatLng(-15.78, -47.93) // Brasília como fallback
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(
+            if (lastLat != null && lastLng != null) LatLng(lastLat, lastLng) else defaultPosition,
+            15f
+        )
+    }
+
+    LaunchedEffect(lastLat, lastLng) {
+        if (lastLat != null && lastLng != null) {
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLng(LatLng(lastLat, lastLng))
+            )
+        }
+    }
+
+    val trailPoints = trail.map { LatLng(it.first, it.second) }
+
+    GoogleMap(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp),
+        cameraPositionState = cameraPositionState,
+        properties = MapProperties(isMyLocationEnabled = lastLat != null),
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = false,
+            myLocationButtonEnabled = false,
+            compassEnabled = false
+        )
+    ) {
+        if (trailPoints.size >= 2) {
+            Polyline(
+                points = trailPoints,
+                color = Color(0xFFF5A623),
+                width = 8f
+            )
+        }
+    }
 }
 
 private fun Long.toTimestamp(): String {

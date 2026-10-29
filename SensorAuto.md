@@ -169,9 +169,9 @@ app/src/main/java/br/com/roadifylogger/
 │   │       └── MainBottomBar.kt       # Bottom nav: Sessão | Arquivos | Configurações
 │   │
 │   ├── screen/
-│   │   ├── session/
-│   │   │   ├── ActiveSessionScreen.kt
-│   │   │   └── ActiveSessionViewModel.kt
+│   │   ├── Start/
+│   │   │   ├── ActiveStartScreen.kt
+│   │   │   └── ActiveStartViewModel.kt
 │   │   ├── preview/
 │   │   │   ├── SensorPreviewScreen.kt
 │   │   │   └── SensorPreviewViewModel.kt

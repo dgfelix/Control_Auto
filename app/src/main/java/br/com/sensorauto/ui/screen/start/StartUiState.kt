@@ -13,5 +13,8 @@ data class StartUiState(
     val dataPoints: Int = 0,
     val sessionStartMs: Long = 0L,
     val totalSpeedSum: Float = 0f,
-    val speedReadings: Int = 0
+    val speedReadings: Int = 0,
+    val lastLat: Double? = null,
+    val lastLng: Double? = null,
+    val locationTrail: List<Pair<Double, Double>> = emptyList()
 )
