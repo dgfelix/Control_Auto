@@ -218,16 +218,19 @@ class ActiveStartViewModel(
         
         _uiState.update {
             it.copy(
-                sessionName = "",
-                status = StartStatus.IDLE,
-                elapsedMs = 0L,
-                distanceKm = 0f,
-                speedKmh = 0f,
-                maxSpeedKmh = 0f,
-                dataPoints = 0,
+                sessionName   = "",
+                status        = StartStatus.IDLE,
+                elapsedMs     = 0L,
+                distanceKm    = 0f,
+                speedKmh      = 0f,
+                maxSpeedKmh   = 0f,
+                dataPoints    = 0,
                 sessionStartMs = 0L,
                 totalSpeedSum = 0f,
-                speedReadings = 0
+                speedReadings = 0,
+                lastLat       = null,
+                lastLng       = null,
+                locationTrail = emptyList()
             )
         }
     }
@@ -341,12 +344,18 @@ class ActiveStartViewModel(
         }
 
         _uiState.update {
+            val newTrail = if (it.status == StartStatus.RUNNING)
+                it.locationTrail + Pair(location.latitude, location.longitude)
+            else it.locationTrail
             it.copy(
-                distanceKm   = it.distanceKm + addedKm,
-                speedKmh     = speedKmh,
-                maxSpeedKmh  = maxOf(it.maxSpeedKmh, speedKmh),
+                distanceKm    = it.distanceKm + addedKm,
+                speedKmh      = speedKmh,
+                maxSpeedKmh   = maxOf(it.maxSpeedKmh, speedKmh),
                 totalSpeedSum = it.totalSpeedSum + speedKmh,
-                speedReadings = it.speedReadings + 1
+                speedReadings = it.speedReadings + 1,
+                lastLat       = location.latitude,
+                lastLng       = location.longitude,
+                locationTrail = newTrail
             )
         }
     }
