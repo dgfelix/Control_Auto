@@ -1,25 +1,28 @@
 package br.com.sensorauto
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.SideEffect
 import androidx.core.view.WindowCompat
+import br.com.sensorauto.ui.theme.LocalLocalePreferences
 import br.com.sensorauto.ui.theme.LocalThemePreferences
+import br.com.sensorauto.ui.theme.LocalePreferences
 import br.com.sensorauto.ui.theme.ThemePreferences
 import br.com.sensorauto.navigation.SensorAutoNavHost
 import br.com.sensorauto.ui.theme.SensorAutoTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val appearance = remember { ThemePreferences(applicationContext) }
+            val locale = remember { LocalePreferences(applicationContext) }
             val darkTheme = if (appearance.followSystem) isSystemInDarkTheme()
             else appearance.darkTheme
             SideEffect {
@@ -28,7 +31,10 @@ class MainActivity : ComponentActivity() {
                     isAppearanceLightNavigationBars = !darkTheme
                 }
             }
-            CompositionLocalProvider(LocalThemePreferences provides appearance) {
+            CompositionLocalProvider(
+                LocalThemePreferences provides appearance,
+                LocalLocalePreferences provides locale
+            ) {
                 SensorAutoTheme(darkTheme = darkTheme) {
                     SensorAutoNavHost()
                 }

@@ -32,8 +32,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.com.sensorauto.R
 import br.com.sensorauto.domain.model.Recording
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -60,7 +62,7 @@ fun RecordingDetailScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
             }
             Spacer(Modifier.width(4.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -70,12 +72,12 @@ fun RecordingDetailScreen(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Detalhes da gravação",
+                    text = stringResource(R.string.detail_subtitle),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             if (isZipping) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
@@ -87,8 +89,8 @@ fun RecordingDetailScreen(
                     enabled = files.isNotEmpty()
                 ) {
                     Icon(
-                        Icons.Default.Share, 
-                        contentDescription = "Compartilhar tudo",
+                        Icons.Default.Share,
+                        contentDescription = stringResource(R.string.action_share_all),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -110,7 +112,7 @@ fun RecordingDetailScreen(
 
             item {
                 Text(
-                    text = "ARQUIVOS DA SESSÃO",
+                    text = stringResource(R.string.detail_files_title),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -120,7 +122,7 @@ fun RecordingDetailScreen(
             if (files.isEmpty()) {
                 item {
                     Text(
-                        text = "Nenhum arquivo encontrado para esta sessão.",
+                        text = stringResource(R.string.detail_no_files),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -148,29 +150,30 @@ private fun SummarySection(recording: Recording) {
     ) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
-                text = "RESUMO",
+                text = stringResource(R.string.detail_summary),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                SummaryItem("Início", "$startDate  $startTime")
-                SummaryItem("Fim", endTime)
+                SummaryItem(stringResource(R.string.detail_start), "$startDate  $startTime")
+                SummaryItem(stringResource(R.string.detail_end), endTime)
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
+            val dash = stringResource(R.string.common_dash)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatTile("Distância", "%.2f km".format(recording.distanceKm), Modifier.weight(1f))
-                StatTile("Duração", recording.durationMs.toDurationString(), Modifier.weight(1f))
+                StatTile(stringResource(R.string.history_stat_distance), "%.2f km".format(recording.distanceKm), Modifier.weight(1f))
+                StatTile(stringResource(R.string.history_stat_duration), recording.durationMs.toDurationString(), Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatTile("Vel. Média", "%.0f km/h".format(recording.avgSpeedKmh), Modifier.weight(1f))
-                StatTile("Vel. Máx.", "%.0f km/h".format(recording.maxSpeedKmh), Modifier.weight(1f))
+                StatTile(stringResource(R.string.history_stat_avg_speed), "%.0f km/h".format(recording.avgSpeedKmh), Modifier.weight(1f))
+                StatTile(stringResource(R.string.history_stat_max_speed), "%.0f km/h".format(recording.maxSpeedKmh), Modifier.weight(1f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatTile("Pontos", "%,d".format(recording.dataPoints), Modifier.weight(1f))
-                StatTile("Dispositivo", recording.deviceId.ifEmpty { "—" }, Modifier.weight(1f))
+                StatTile(stringResource(R.string.history_stat_samples), "%,d".format(recording.dataPoints), Modifier.weight(1f))
+                StatTile(stringResource(R.string.history_stat_device), recording.deviceId.ifEmpty { dash }, Modifier.weight(1f))
             }
         }
     }
@@ -206,14 +209,23 @@ private fun SensorFileCard(file: RecordingFile) {
         file.name.contains("acelerometro") -> Icons.Default.Sensors
         file.name.contains("giroscopio") -> Icons.Default.Speed
         file.name.contains("gps") -> Icons.Default.GpsFixed
+        file.name.contains("photos") -> Icons.Default.Description
         else -> Icons.Default.Description
     }
 
     val sensorDisplayName = when {
-        file.name.contains("acelerometro") -> "Acelerômetro"
-        file.name.contains("giroscopio") -> "Giroscópio"
-        file.name.contains("gps") -> "GPS"
+        file.name.contains("acelerometro") -> stringResource(R.string.sensor_accel)
+        file.name.contains("giroscopio") -> stringResource(R.string.sensor_gyro)
+        file.name.contains("gps") -> stringResource(R.string.sensor_gps)
+        file.name.contains("photos") -> stringResource(R.string.file_photos)
         else -> file.name
+    }
+
+    // Pastas (ex: "photos/") não devem exibir tamanho.
+    val subtitle = if (file.isDirectory) {
+        file.name
+    } else {
+        "${file.name} • ${file.sizeBytes.toReadableSize()}"
     }
 
     Card(
@@ -237,7 +249,7 @@ private fun SensorFileCard(file: RecordingFile) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(sensorDisplayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                 Text(
-                    text = "${file.name} • ${file.sizeBytes.toReadableSize()}",
+                    text = subtitle,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -254,10 +266,10 @@ private fun Long.toReadableSize(): String {
 }
 
 private fun Long.toDateString(): String =
-    SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")).format(Date(this))
+    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(this))
 
 private fun Long.toTimeString(): String =
-    SimpleDateFormat("HH:mm:ss", Locale("pt", "BR")).format(Date(this))
+    SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(this))
 
 private fun Long.toDurationString(): String {
     val totalSeconds = this / 1000

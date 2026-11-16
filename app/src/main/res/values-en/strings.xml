@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Roadify Logger</string>
+    <string name="app_title">ROADIFY LOGGER</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_start">Start</string>
+    <string name="nav_config">Settings</string>
+    <string name="nav_sensors">Sensors</string>
+    <string name="nav_history">History</string>
+
+    <!-- Common -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_back">Back</string>
+    <string name="action_share_all">Share all</string>
+    <string name="common_dash">—</string>
+
+    <!-- Active session -->
+    <string name="active_session_id_label">SESSION ID</string>
+    <string name="active_elapsed_time_label">ELAPSED TIME</string>
+    <string name="active_distance">Distance</string>
+    <string name="active_speed">Speed</string>
+    <string name="active_accel">Accelerometer</string>
+    <string name="active_battery">Battery</string>
+    <string name="active_chart_accel">Accelerometer</string>
+    <string name="active_chart_gyro">Gyroscope</string>
+    <string name="active_chart_magneto">Magnetometer</string>
+    <string name="active_trail_title">TRAIL</string>
+    <string name="active_photo_capture_on">Photo capture active</string>
+    <string name="action_start_session">START SESSION</string>
+    <string name="action_pause">PAUSE</string>
+    <string name="action_resume">RESUME</string>
+    <string name="action_stop">STOP</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_m">m</string>
+    <string name="unit_km">km</string>
+    <string name="unit_ms2">m/s²</string>
+    <string name="unit_rads">rad/s</string>
+    <string name="unit_ut">µT</string>
+    <string name="axis_roll">Roll</string>
+    <string name="axis_pitch">Pitch</string>
+    <string name="axis_yaw">Yaw</string>
+
+    <!-- Equipment / Configuration -->
+    <string name="config_title">Collection Settings</string>
+    <string name="config_subtitle">Define telemetry parameters before starting the session.</string>
+    <string name="config_section_vehicle">Vehicle &amp; Mount</string>
+    <string name="config_section_device">Mobile Device</string>
+    <string name="config_section_appearance">Appearance</string>
+    <string name="config_section_language">Language</string>
+    <string name="field_brand">Brand</string>
+    <string name="field_model">Model</string>
+    <string name="field_year">Year</string>
+    <string name="field_engine">Engine</string>
+    <string name="field_gear">Transmission</string>
+    <string name="field_motor">Motor</string>
+    <string name="gear_manual">Manual</string>
+    <string name="gear_auto">Auto</string>
+    <string name="motor_combustion">Comb.</string>
+    <string name="motor_electric">Elec.</string>
+    <string name="mount_orientation">Mount Orientation</string>
+    <string name="orientation_vertical">Vertical</string>
+    <string name="orientation_horizontal">Horizontal</string>
+    <string name="action_auto_detect">Auto-Detect</string>
+    <string name="appearance_follow_system">Follow system theme</string>
+    <string name="appearance_follow_system_on">System theme active</string>
+    <string name="appearance_follow_system_off">System theme off</string>
+    <string name="appearance_dark_theme">Dark theme</string>
+    <string name="appearance_dark_on">Dark theme active</string>
+    <string name="appearance_dark_off">Light theme active</string>
+    <string name="appearance_auto">Automatic: following system</string>
+    <string name="appearance_auto_saved">Appearance is saved automatically.</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_english">English</string>
+    <string name="language_desc_pt">Aplicativo em Português</string>
+    <string name="language_desc_en">App in English</string>
+
+    <!-- Sensors -->
+    <string name="sensors_title">Sensor Settings</string>
+    <string name="sensor_accel">Accelerometer</string>
+    <string name="sensor_accel_desc">Captures force variations along the 3 axes. Essential for IRI calculation.</string>
+    <string name="sensor_gyro">Gyroscope</string>
+    <string name="sensor_gyro_desc">Measures angular rotation. Complements the accelerometer in detecting inclinations.</string>
+    <string name="sensor_gps">GPS</string>
+    <string name="sensor_gps_desc">Records the geographic position along the route.</string>
+    <string name="sensor_magneto">Magnetometer</string>
+    <string name="sensor_magneto_desc">Measures ambient magnetic field along the 3 axes (compass and orientation).</string>
+    <string name="sensor_camera">Camera</string>
+    <string name="sensor_camera_desc">Takes photos at regular intervals during inspection for later visual analysis.</string>
+    <string name="sensor_available">Available</string>
+    <string name="sensor_unavailable">Unavailable</string>
+    <string name="action_calibrate_level">Calibrate Level</string>
+    <string name="camera_interval_label">Interval between photos</string>
+    <string name="toast_sensors_saved">Settings saved successfully</string>
+
+    <!-- Bubble level -->
+    <string name="bubble_title">Bubble Level</string>
+    <string name="bubble_leveled">Device Leveled</string>
+    <string name="bubble_adjust">Adjust the tilt</string>
+    <string name="bubble_axis_reading">Axis Reading</string>
+    <string name="bubble_pitch_h">Pitch (Horizontal)</string>
+    <string name="bubble_roll_l">Roll (Lateral)</string>
+    <string name="action_calibrate_zero">Calibrate / Reset Level</string>
+
+    <!-- History -->
+    <string name="history_title">Recording List</string>
+    <string name="history_subtitle">History of all recorded sessions.</string>
+    <string name="history_loading">Loading…</string>
+    <string name="history_empty_title">No recordings found</string>
+    <string name="history_empty_subtitle">Start a session to record data.</string>
+    <string name="history_stat_distance">Distance</string>
+    <string name="history_stat_duration">Duration</string>
+    <string name="history_stat_avg_speed">Avg. Speed</string>
+    <string name="history_stat_max_speed">Max. Speed</string>
+    <string name="history_stat_samples">Samples</string>
+    <string name="history_stat_device">Device</string>
+    <string name="history_view_files">VIEW RECORDING FILES</string>
+    <string name="history_delete_title">Delete recording?</string>
+    <string name="history_delete_message">\"%1$s\" will be permanently removed.</string>
+    <string name="history_rename_title">Rename session</string>
+    <string name="history_rename_field">Session name</string>
+
+    <!-- Detail -->
+    <string name="detail_subtitle">Recording details</string>
+    <string name="detail_summary">SUMMARY</string>
+    <string name="detail_files_title">SESSION FILES</string>
+    <string name="detail_no_files">No files found for this session.</string>
+    <string name="detail_start">Start</string>
+    <string name="detail_end">End</string>
+    <string name="file_photos">Photos</string>
+
+    <!-- Chart axis -->
+    <string name="chart_axis_now">Now</string>
+</resources>

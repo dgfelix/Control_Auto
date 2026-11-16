@@ -44,8 +44,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.com.sensorauto.R
 import br.com.sensorauto.domain.model.Recording
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
@@ -63,12 +65,12 @@ fun RecordingFilesScreen(
         // Header
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
-                text = "Lista de Gravações",
+                text = stringResource(R.string.history_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Histórico de todas as sessões registradas.",
+                text = stringResource(R.string.history_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -79,7 +81,7 @@ fun RecordingFilesScreen(
         when {
             state.isLoading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Carregando...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.history_loading), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             state.recordings.isEmpty() -> {
@@ -120,12 +122,12 @@ private fun EmptyState() {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Nenhuma gravação encontrada",
+                stringResource(R.string.history_empty_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                "Inicie uma sessão para registrar dados.",
+                stringResource(R.string.history_empty_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
@@ -147,18 +149,18 @@ private fun RecordingCard(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Excluir gravação?") },
-            text = { Text("\"${recording.name}\" será removida permanentemente.") },
+            title = { Text(stringResource(R.string.history_delete_title)) },
+            text = { Text(stringResource(R.string.history_delete_message, recording.name)) },
             confirmButton = {
                 Button(
                     onClick = { onDelete(); showDeleteDialog = false },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
-                ) { Text("Excluir") }
+                ) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -167,12 +169,12 @@ private fun RecordingCard(
         var newName by remember { mutableStateOf(recording.name) }
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
-            title = { Text("Renomear sessão") },
+            title = { Text(stringResource(R.string.history_rename_title)) },
             text = {
                 OutlinedTextField(
                     value = newName,
                     onValueChange = { newName = it },
-                    label = { Text("Nome da sessão") },
+                    label = { Text(stringResource(R.string.history_rename_field)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -185,10 +187,10 @@ private fun RecordingCard(
                             showRenameDialog = false
                         }
                     }
-                ) { Text("Salvar") }
+                ) { Text(stringResource(R.string.action_save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showRenameDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -220,19 +222,19 @@ private fun RecordingCard(
                     ) {
                         Icon(
                             Icons.Default.Edit,
-                            contentDescription = "Renomear",
+                            contentDescription = stringResource(R.string.action_rename),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
+
                     IconButton(
                         onClick = { showDeleteDialog = true },
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Excluir",
+                            contentDescription = stringResource(R.string.action_delete),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
@@ -271,9 +273,9 @@ private fun RecordingCard(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StatLabel("%.1f km".format(recording.distanceKm), "Distância")
+                    StatLabel("%.1f km".format(recording.distanceKm), stringResource(R.string.history_stat_distance))
                     Spacer(Modifier.width(20.dp))
-                    StatLabel(recording.durationMs.toDurationString(), "Duração")
+                    StatLabel(recording.durationMs.toDurationString(), stringResource(R.string.history_stat_duration))
                     Spacer(Modifier.width(8.dp))
                     Icon(
                         Icons.Default.ExpandMore,
@@ -300,16 +302,17 @@ private fun RecordingCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        StatCard("Vel. Média", "%.0f km/h".format(recording.avgSpeedKmh), Modifier.weight(1f))
-                        StatCard("Vel. Máx.", "%.0f km/h".format(recording.maxSpeedKmh), Modifier.weight(1f))
+                        StatCard(stringResource(R.string.history_stat_avg_speed), "%.0f km/h".format(recording.avgSpeedKmh), Modifier.weight(1f))
+                        StatCard(stringResource(R.string.history_stat_max_speed), "%.0f km/h".format(recording.maxSpeedKmh), Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(8.dp))
+                    val dash = stringResource(R.string.common_dash)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        StatCard("Amostras", "%,d".format(recording.dataPoints), Modifier.weight(1f))
-                        StatCard("Dispositivo", recording.deviceId.ifEmpty { "—" }, Modifier.weight(1f))
+                        StatCard(stringResource(R.string.history_stat_samples), "%,d".format(recording.dataPoints), Modifier.weight(1f))
+                        StatCard(stringResource(R.string.history_stat_device), recording.deviceId.ifEmpty { dash }, Modifier.weight(1f))
                     }
 
                     Spacer(Modifier.height(16.dp))
@@ -321,7 +324,7 @@ private fun RecordingCard(
                     ) {
                         Icon(Icons.Default.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("VER ARQUIVOS DA GRAVAÇÃO", style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.history_view_files), style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -353,7 +356,7 @@ private fun StatCard(label: String, value: String, modifier: Modifier = Modifier
 }
 
 private fun Long.toDateString(): String =
-    SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("pt", "BR")).format(Date(this))
+    SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date(this))
 
 private fun Long.toDurationString(): String {
     val totalSeconds = this / 1000

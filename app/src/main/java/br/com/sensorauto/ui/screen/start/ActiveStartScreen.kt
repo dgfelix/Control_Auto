@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.Cached
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -47,12 +48,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import br.com.sensorauto.R
 import br.com.sensorauto.ui.components.SensorChart
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -75,15 +79,23 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
     ) { permissions ->
         val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
         val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
-        
+
         if (cameraGranted) {
             viewModel.setupCamera(context, lifecycleOwner)
         }
-        
+
         viewModel.startSession(
             hasLocationPermission = locationGranted,
             hasCameraPermission = cameraGranted
         )
+    }
+
+    // Pede permissão de localização ao entrar na tela (modo preview) para o mapa
+    // já aparecer centralizado no usuário mesmo antes de iniciar a sessão.
+    val previewLocationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) viewModel.startPreviewLocationUpdates()
     }
 
     LaunchedEffect(Unit) {
@@ -92,6 +104,15 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
         ) == PackageManager.PERMISSION_GRANTED
         if (hasCameraPermission) {
             viewModel.setupCamera(context, lifecycleOwner)
+        }
+
+        val hasLocationPermission = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasLocationPermission) {
+            viewModel.startPreviewLocationUpdates()
+        } else {
+            previewLocationLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
@@ -128,78 +149,77 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
             shadowElevation = 2.dp
         ) {
             Column {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(16.dp)
                 ) {
-                    Column {
-                        Text(
-                            text = "IDENTIFICAÇÃO DA SESSÃO",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = state.sessionName.ifEmpty { "—" },
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "TEMPO DECORRIDO",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = state.elapsedMs.toTimestamp(),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.active_session_id_label),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = state.sessionName.ifEmpty { stringResource(R.string.common_dash) },
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = stringResource(R.string.active_elapsed_time_label),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = state.elapsedMs.toTimestamp(),
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
 
                 HorizontalDivider()
 
                 Row(modifier = Modifier.fillMaxWidth()) {
+                    val (distValue, distUnit) = formatDistance(state.distanceKm)
                     TelemetryCell(
                         icon = Icons.Default.Route,
-                        label = "Distância",
-                        value = "%.1f".format(state.distanceKm),
-                        unit = "km",
+                        label = stringResource(R.string.active_distance),
+                        value = distValue,
+                        unit = distUnit,
                         modifier = Modifier.weight(1f)
                     )
                     CellDivider()
                     TelemetryCell(
                         icon = Icons.Default.Speed,
-                        label = "Velocidade",
+                        label = stringResource(R.string.active_speed),
                         value = "%.0f".format(state.speedKmh),
-                        unit = "km/h",
+                        unit = stringResource(R.string.unit_kmh),
                         modifier = Modifier.weight(1f)
                     )
                 }
                 HorizontalDivider()
                 Row(modifier = Modifier.fillMaxWidth()) {
+                    val dash = stringResource(R.string.common_dash)
                     TelemetryCell(
                         icon = Icons.Default.Sensors,
-                        label = "Acelerômetro",
+                        label = stringResource(R.string.active_accel),
                         value = state.accelSamples.lastOrNull()
-                            ?.let { "%.2f".format(it[0]) } ?: "—",
-                        unit = "m/s²",
+                            ?.let { "%.2f".format(it[0]) } ?: dash,
+                        unit = stringResource(R.string.unit_ms2),
                         modifier = Modifier.weight(1f)
                     )
                     CellDivider()
                     TelemetryCell(
                         icon = Icons.Default.BatteryFull,
-                        label = "Bateria",
+                        label = stringResource(R.string.active_battery),
                         value = "${state.batteryPercent}",
-                        unit = "%",
+                        unit = stringResource(R.string.unit_percent),
                         valueColor = if (state.batteryPercent < 20) Color(0xFFEB5757)
                                      else Color(0xFF27AE60),
                         modifier = Modifier.weight(1f)
@@ -208,10 +228,12 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
             }
         }
 
-        val accelColors = listOf(Color(0xFFF5A623), Color(0xFFEB5757), Color(0xFF27AE60))
-        val gyroColors  = listOf(Color(0xFF00658A), Color(0xFF27AE60), Color(0xFF9C27B0))
-        val lastAccel   = state.accelSamples.lastOrNull()
-        val lastGyro    = state.gyroSamples.lastOrNull()
+        val accelColors   = listOf(Color(0xFFF5A623), Color(0xFFEB5757), Color(0xFF27AE60))
+        val gyroColors    = listOf(Color(0xFF00658A), Color(0xFF27AE60), Color(0xFF9C27B0))
+        val magnetoColors = listOf(Color(0xFF3F51B5), Color(0xFF00BCD4), Color(0xFFE91E63))
+        val lastAccel    = state.accelSamples.lastOrNull()
+        val lastGyro     = state.gyroSamples.lastOrNull()
+        val lastMagneto  = state.magnetoSamples.lastOrNull()
 
         Surface(
             shape = MaterialTheme.shapes.large,
@@ -220,7 +242,7 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
         ) {
             Column {
                 SensorChart(
-                    title = "Acelerômetro",
+                    title = stringResource(R.string.active_chart_accel),
                     icon = Icons.Default.StackedLineChart,
                     series = listOf(
                         state.accelSamples.map { it[0] },
@@ -231,13 +253,13 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                     yRange = -20f..20f,
                     axisLabels = listOf("X", "Y", "Z"),
                     axisValues = lastAccel?.toList(),
-                    axisUnit = "m/s²"
+                    axisUnit = stringResource(R.string.unit_ms2)
                 )
 
                 HorizontalDivider()
 
                 SensorChart(
-                    title = "Giroscópio",
+                    title = stringResource(R.string.active_chart_gyro),
                     icon = Icons.Default.Cached,
                     series = listOf(
                         state.gyroSamples.map { it[0] },
@@ -246,9 +268,30 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                     ),
                     seriesColors = gyroColors,
                     yRange = -10f..10f,
-                    axisLabels = listOf("Roll", "Pitch", "Yaw"),
+                    axisLabels = listOf(
+                        stringResource(R.string.axis_roll),
+                        stringResource(R.string.axis_pitch),
+                        stringResource(R.string.axis_yaw)
+                    ),
                     axisValues = lastGyro?.toList(),
-                    axisUnit = "rad/s"
+                    axisUnit = stringResource(R.string.unit_rads)
+                )
+
+                HorizontalDivider()
+
+                SensorChart(
+                    title = stringResource(R.string.active_chart_magneto),
+                    icon = Icons.Default.Explore,
+                    series = listOf(
+                        state.magnetoSamples.map { it[0] },
+                        state.magnetoSamples.map { it[1] },
+                        state.magnetoSamples.map { it[2] }
+                    ),
+                    seriesColors = magnetoColors,
+                    yRange = -100f..100f,
+                    axisLabels = listOf("X", "Y", "Z"),
+                    axisValues = lastMagneto?.toList(),
+                    axisUnit = stringResource(R.string.unit_ut)
                 )
             }
         }
@@ -275,7 +318,7 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        "TRAJETO",
+                        stringResource(R.string.active_trail_title),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -283,14 +326,15 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                 TrailMap(
                     trail = state.locationTrail,
                     lastLat = state.lastLat,
-                    lastLng = state.lastLng
+                    lastLng = state.lastLng,
+                    distanceKm = state.distanceKm
                 )
             }
         }
 
         HorizontalDivider()
         
-        if (state.status == StartStatus.RUNNING) {
+        if (state.status == StartStatus.RUNNING && state.photoCaptureActive) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -304,7 +348,7 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Captura de fotos ativa",
+                    stringResource(R.string.active_photo_capture_on),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -325,47 +369,75 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("INICIAR SESSÃO", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.action_start_session), style = MaterialTheme.typography.titleMedium)
                     }
                 }
                 StartStatus.RUNNING -> {
                     OutlinedButton(
                         onClick = viewModel::pauseSession,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp)
                     ) {
-                        Icon(Icons.Default.Pause, contentDescription = null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("PAUSAR", style = MaterialTheme.typography.titleMedium)
+                        Icon(Icons.Default.Pause, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.action_pause),
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Clip
+                        )
                     }
                     Button(
                         onClick = viewModel::stopSession,
-                        modifier = Modifier.weight(2f),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     ) {
-                        Icon(Icons.Default.Stop, contentDescription = null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("FINALIZAR", style = MaterialTheme.typography.titleMedium)
+                        Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.action_stop),
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Clip
+                        )
                     }
                 }
                 StartStatus.PAUSED -> {
                     OutlinedButton(
                         onClick = viewModel::stopSession,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp)
                     ) {
-                        Icon(Icons.Default.Stop, contentDescription = null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("FINALIZAR", style = MaterialTheme.typography.titleMedium)
+                        Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.action_stop),
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Clip
+                        )
                     }
                     Button(
                         onClick = viewModel::resumeSession,
-                        modifier = Modifier.weight(2f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp)
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("RETOMAR", style = MaterialTheme.typography.titleMedium)
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.action_resume),
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Clip
+                        )
                     }
                 }
             }
@@ -436,45 +508,92 @@ private fun CellDivider() {
 private fun TrailMap(
     trail: List<Pair<Double, Double>>,
     lastLat: Double?,
-    lastLng: Double?
+    lastLng: Double?,
+    distanceKm: Float
 ) {
     val defaultPosition = LatLng(-15.78, -47.93) // Brasília como fallback
+    val closeZoom = 18f
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             if (lastLat != null && lastLng != null) LatLng(lastLat, lastLng) else defaultPosition,
-            15f
+            closeZoom
         )
     }
 
     LaunchedEffect(lastLat, lastLng) {
         if (lastLat != null && lastLng != null) {
             cameraPositionState.animate(
-                CameraUpdateFactory.newLatLng(LatLng(lastLat, lastLng))
+                CameraUpdateFactory.newLatLngZoom(LatLng(lastLat, lastLng), closeZoom)
             )
         }
     }
 
     val trailPoints = trail.map { LatLng(it.first, it.second) }
 
-    GoogleMap(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(260.dp),
-        cameraPositionState = cameraPositionState,
-        properties = MapProperties(isMyLocationEnabled = lastLat != null),
-        uiSettings = MapUiSettings(
-            zoomControlsEnabled = false,
-            myLocationButtonEnabled = false,
-            compassEnabled = false
-        )
-    ) {
-        if (trailPoints.size >= 2) {
-            Polyline(
-                points = trailPoints,
-                color = Color(0xFFF5A623),
-                width = 8f
+    androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxWidth()) {
+        GoogleMap(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(isMyLocationEnabled = lastLat != null),
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                myLocationButtonEnabled = false,
+                compassEnabled = false
             )
+        ) {
+            if (trailPoints.size >= 2) {
+                Polyline(
+                    points = trailPoints,
+                    color = Color(0xFFF5A623),
+                    width = 8f
+                )
+            }
         }
+
+        val (distValue, distUnit) = formatDistance(distanceKm)
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(10.dp),
+            shape = MaterialTheme.shapes.large,
+            color = Color(0xFFF5A623).copy(alpha = 0.92f),
+            shadowElevation = 2.dp
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Route,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = "$distValue $distUnit",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Formata distância preservando precisão em metros.
+ *  < 1 km  → "857" m
+ *  ≥ 1 km  → "1.587" km (3 casas = metros reais)
+ */
+private fun formatDistance(distanceKm: Float): Pair<String, String> {
+    val meters = distanceKm * 1000f
+    return if (meters < 1000f) {
+        "%.0f".format(meters) to "m"
+    } else {
+        "%.3f".format(distanceKm) to "km"
     }
 }
 
