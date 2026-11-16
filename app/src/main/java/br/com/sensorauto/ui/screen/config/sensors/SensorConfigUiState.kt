@@ -1,5 +1,6 @@
 package br.com.sensorauto.ui.screen.config.sensors
 
+import androidx.annotation.StringRes
 import br.com.sensorauto.domain.model.SensorType
 
 data class SensorConfigUiState(
@@ -9,8 +10,8 @@ data class SensorConfigUiState(
 
 data class SensorConfigItem(
     val type: SensorType,
-    val label: String,
-    val description: String,
+    @StringRes val labelRes: Int,
+    @StringRes val descriptionRes: Int,
     val isAvailable: Boolean,
     val isEnabled: Boolean,
     val frequencyHz: Int,

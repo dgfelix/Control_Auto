@@ -20,6 +20,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import br.com.sensorauto.R
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -49,10 +51,10 @@ fun SensorAutoNavHost() {
     val currentDestination = navBackStackEntry?.destination
 
     val bottomItems = listOf(
-        BottomNavItem("Iniciar",     Icons.Default.RadioButtonChecked, Screen.ActiveSession),
-        BottomNavItem("Equipamentos", Icons.Default.DirectionsCar,      Screen.EquipmentConfig),
-        BottomNavItem("Sensores",    Icons.Default.Sensors,            Screen.SensorConfig),
-        BottomNavItem("Histórico",   Icons.Default.VideoLibrary,       Screen.RecordingFiles),
+        BottomNavItem(stringResource(R.string.nav_start),    Icons.Default.RadioButtonChecked, Screen.ActiveSession),
+        BottomNavItem(stringResource(R.string.nav_config),   Icons.Default.DirectionsCar,      Screen.EquipmentConfig),
+        BottomNavItem(stringResource(R.string.nav_sensors),  Icons.Default.Sensors,            Screen.SensorConfig),
+        BottomNavItem(stringResource(R.string.nav_history),  Icons.Default.VideoLibrary,       Screen.RecordingFiles),
     )
 
     Scaffold(
@@ -60,7 +62,7 @@ fun SensorAutoNavHost() {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "ROADIFY LOGGER",
+                        text = stringResource(R.string.app_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary

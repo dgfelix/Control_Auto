@@ -37,10 +37,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.Role
+import br.com.sensorauto.R
+import br.com.sensorauto.ui.theme.LocalLocalePreferences
 import br.com.sensorauto.ui.theme.LocalThemePreferences
 import br.com.sensorauto.domain.model.GearType
 import br.com.sensorauto.domain.model.MotorType
@@ -55,6 +58,7 @@ fun EquipmentConfigScreen(
     val state by viewModel.uiState.collectAsState()
     val config = state.config
     val appearance = LocalThemePreferences.current
+    val locale = LocalLocalePreferences.current
     val effectiveDarkTheme = if (appearance.followSystem) isSystemInDarkTheme()
     else appearance.darkTheme
 
@@ -67,30 +71,30 @@ fun EquipmentConfigScreen(
     ) {
         Column {
             Text(
-                text = "Configuração da Coleta",
+                text = stringResource(R.string.config_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Defina os parâmetros de telemetria antes de iniciar a sessão.",
+                text = stringResource(R.string.config_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
-        SectionCard(title = "Veículo & Suporte", content = {
+        SectionCard(title = stringResource(R.string.config_section_vehicle), content = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = config.vehicleBrand,
                     onValueChange = viewModel::updateVehicleBrand,
-                    label = { Text("Marca") },
+                    label = { Text(stringResource(R.string.field_brand)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = config.vehicleModel,
                     onValueChange = viewModel::updateVehicleModel,
-                    label = { Text("Modelo") },
+                    label = { Text(stringResource(R.string.field_model)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true
                 )
@@ -100,7 +104,7 @@ fun EquipmentConfigScreen(
                 OutlinedTextField(
                     value = config.vehicleYear,
                     onValueChange = viewModel::updateVehicleYear,
-                    label = { Text("Ano") },
+                    label = { Text(stringResource(R.string.field_year)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     singleLine = true
@@ -108,7 +112,7 @@ fun EquipmentConfigScreen(
                 OutlinedTextField(
                     value = config.vehicleEngine,
                     onValueChange = viewModel::updateVehicleEngine,
-                    label = { Text("Motorização") },
+                    label = { Text(stringResource(R.string.field_engine)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true
                 )
@@ -117,14 +121,14 @@ fun EquipmentConfigScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Câmbio",
+                        stringResource(R.string.field_gear),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(4.dp))
                     LabeledSwitch(
-                        leftLabel = "Manual",
-                        rightLabel = "Auto",
+                        leftLabel = stringResource(R.string.gear_manual),
+                        rightLabel = stringResource(R.string.gear_auto),
                         checked = config.gearType == GearType.AUTO,
                         onCheckedChange = { on ->
                             viewModel.updateGearType(if (on) GearType.AUTO else GearType.MANUAL)
@@ -133,14 +137,14 @@ fun EquipmentConfigScreen(
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Motor",
+                        stringResource(R.string.field_motor),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(4.dp))
                     LabeledSwitch(
-                        leftLabel = "Comb.",
-                        rightLabel = "Elét.",
+                        leftLabel = stringResource(R.string.motor_combustion),
+                        rightLabel = stringResource(R.string.motor_electric),
                         checked = config.motorType == MotorType.ELECTRIC,
                         onCheckedChange = { on ->
                             viewModel.updateMotorType(if (on) MotorType.ELECTRIC else MotorType.COMBUSTION)
@@ -150,21 +154,21 @@ fun EquipmentConfigScreen(
             }
             Spacer(Modifier.height(12.dp))
             Text(
-                "Orientação do Suporte",
+                stringResource(R.string.mount_orientation),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(4.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OrientationCard(
-                    label = "Vertical",
+                    label = stringResource(R.string.orientation_vertical),
                     rotation = 0f,
                     isSelected = config.mountOrientation == Orientation.VERTICAL,
                     onClick = { viewModel.updateOrientation(Orientation.VERTICAL) },
                     modifier = Modifier.weight(1f)
                 )
                 OrientationCard(
-                    label = "Horizontal",
+                    label = stringResource(R.string.orientation_horizontal),
                     rotation = 90f,
                     isSelected = config.mountOrientation == Orientation.HORIZONTAL,
                     onClick = { viewModel.updateOrientation(Orientation.HORIZONTAL) },
@@ -174,7 +178,7 @@ fun EquipmentConfigScreen(
         })
 
         SectionCard(
-            title = "Dispositivo Móvel",
+            title = stringResource(R.string.config_section_device),
             headerAction = {
                 TextButton(onClick = viewModel::autoDetectDevice) {
                     Icon(
@@ -183,14 +187,14 @@ fun EquipmentConfigScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text("Auto-Detect", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.action_auto_detect), style = MaterialTheme.typography.labelSmall)
                 }
             },
             content = {
                 OutlinedTextField(
                     value = config.deviceBrand,
                     onValueChange = viewModel::updateDeviceBrand,
-                    label = { Text("Marca") },
+                    label = { Text(stringResource(R.string.field_brand)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -199,14 +203,14 @@ fun EquipmentConfigScreen(
                     OutlinedTextField(
                         value = config.deviceModel,
                         onValueChange = viewModel::updateDeviceModel,
-                        label = { Text("Modelo") },
+                        label = { Text(stringResource(R.string.field_model)) },
                         modifier = Modifier.weight(1f),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = config.deviceYear,
                         onValueChange = viewModel::updateDeviceYear,
-                        label = { Text("Ano") },
+                        label = { Text(stringResource(R.string.field_year)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         singleLine = true
@@ -215,7 +219,34 @@ fun EquipmentConfigScreen(
             }
         )
 
-        SectionCard(title = "Aparência") {
+        SectionCard(title = stringResource(R.string.config_section_language)) {
+            val isEnglish = locale.languageTag.startsWith("en")
+            Row(
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
+                    value = isEnglish,
+                    role = Role.Switch,
+                    onValueChange = { on -> locale.update(if (on) "en" else "pt-BR") }
+                ).padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        if (isEnglish) stringResource(R.string.language_english)
+                        else stringResource(R.string.language_portuguese),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        if (isEnglish) stringResource(R.string.language_desc_en)
+                        else stringResource(R.string.language_desc_pt),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(checked = isEnglish, onCheckedChange = null)
+            }
+        }
+
+        SectionCard(title = stringResource(R.string.config_section_appearance)) {
             Row(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
                     value = appearance.followSystem,
@@ -225,10 +256,10 @@ fun EquipmentConfigScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Usar tema do celular", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.appearance_follow_system), style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        if (appearance.followSystem) "Tema do celular ativo"
-                        else "Tema do celular desativado",
+                        if (appearance.followSystem) stringResource(R.string.appearance_follow_system_on)
+                        else stringResource(R.string.appearance_follow_system_off),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -248,10 +279,11 @@ fun EquipmentConfigScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Tema escuro", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.appearance_dark_theme), style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        if (appearance.followSystem) "Automático: seguindo o celular"
-                        else if (effectiveDarkTheme) "Tema escuro ativo" else "Tema claro ativo",
+                        if (appearance.followSystem) stringResource(R.string.appearance_auto)
+                        else if (effectiveDarkTheme) stringResource(R.string.appearance_dark_on)
+                        else stringResource(R.string.appearance_dark_off),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -263,7 +295,7 @@ fun EquipmentConfigScreen(
                 )
             }
             Text(
-                "A aparência é salva automaticamente.",
+                stringResource(R.string.appearance_auto_saved),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -279,7 +311,7 @@ fun EquipmentConfigScreen(
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(Modifier.width(4.dp))
-                Text("Salvar", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.action_save), style = MaterialTheme.typography.titleMedium)
             }
         }
 

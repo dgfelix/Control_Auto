@@ -9,6 +9,7 @@ data class StartUiState(
     val batteryPercent: Int = 0,
     val accelSamples: List<FloatArray> = emptyList(),
     val gyroSamples: List<FloatArray> = emptyList(),
+    val magnetoSamples: List<FloatArray> = emptyList(),
     val status: StartStatus = StartStatus.IDLE,
     val dataPoints: Int = 0,
     val sessionStartMs: Long = 0L,
@@ -16,5 +17,6 @@ data class StartUiState(
     val speedReadings: Int = 0,
     val lastLat: Double? = null,
     val lastLng: Double? = null,
-    val locationTrail: List<Pair<Double, Double>> = emptyList()
+    val locationTrail: List<Pair<Double, Double>> = emptyList(),
+    val photoCaptureActive: Boolean = false
 )

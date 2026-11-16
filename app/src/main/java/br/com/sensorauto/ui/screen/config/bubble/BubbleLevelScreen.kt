@@ -27,8 +27,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.com.sensorauto.R
 import br.com.sensorauto.ui.components.PrimaryButton
 import br.com.sensorauto.ui.components.SectionCard
 import br.com.sensorauto.ui.theme.GreenSuccess
@@ -46,10 +48,10 @@ fun BubbleLevelScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Nível de Bolha", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.bubble_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 }
             )
@@ -76,20 +78,20 @@ fun BubbleLevelScreen(
 
             Spacer(Modifier.height(4.dp))
 
-            SectionCard(title = "Leitura dos Eixos") {
+            SectionCard(title = stringResource(R.string.bubble_axis_reading)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    AxisReadout(label = "Pitch (Horizontal)", value = state.pitchDeg)
-                    AxisReadout(label = "Roll (Lateral)", value = state.rollDeg)
+                    AxisReadout(label = stringResource(R.string.bubble_pitch_h), value = state.pitchDeg)
+                    AxisReadout(label = stringResource(R.string.bubble_roll_l), value = state.rollDeg)
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
             PrimaryButton(
-                text = "Calibrar / Zerar Nível",
+                text = stringResource(R.string.action_calibrate_zero),
                 onClick = { viewModel.calibrate() }
             )
 
@@ -102,7 +104,7 @@ fun BubbleLevelScreen(
 private fun LevelStatusBadge(isLevel: Boolean) {
     val color = if (isLevel) GreenSuccess else RedAlert
     val icon = if (isLevel) Icons.Default.CheckCircle else Icons.Default.Warning
-    val text = if (isLevel) "Dispositivo Nivelado" else "Ajuste a inclinação"
+    val text = if (isLevel) stringResource(R.string.bubble_leveled) else stringResource(R.string.bubble_adjust)
 
     Surface(
         color = color.copy(alpha = 0.15f),

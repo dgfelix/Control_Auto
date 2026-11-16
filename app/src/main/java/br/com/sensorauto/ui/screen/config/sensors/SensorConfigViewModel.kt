@@ -2,6 +2,7 @@ package br.com.sensorauto.ui.screen.config.sensors
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.sensorauto.R
 import br.com.sensorauto.data.sensor.SensorChecker
 import br.com.sensorauto.domain.model.AppConfig
 import br.com.sensorauto.domain.model.SensorType
@@ -38,8 +39,8 @@ class SensorConfigViewModel(
     private fun buildItems(): List<SensorConfigItem> = listOf(
         SensorConfigItem(
             type = SensorType.ACCEL,
-            label = "Acelerômetro",
-            description = "Captura variações de força ao longo dos 3 eixos. Essencial para calcular IRI.",
+            labelRes = R.string.sensor_accel,
+            descriptionRes = R.string.sensor_accel_desc,
             isAvailable = sensorChecker.isAvailable(SensorType.ACCEL),
             isEnabled = config.accelEnabled,
             frequencyHz = config.accelHz,
@@ -47,8 +48,8 @@ class SensorConfigViewModel(
         ),
         SensorConfigItem(
             type = SensorType.GYRO,
-            label = "Giroscópio",
-            description = "Mede rotação angular. Complementa o acelerômetro na detecção de inclinações.",
+            labelRes = R.string.sensor_gyro,
+            descriptionRes = R.string.sensor_gyro_desc,
             isAvailable = sensorChecker.isAvailable(SensorType.GYRO),
             isEnabled = config.gyroEnabled,
             frequencyHz = config.gyroHz,
@@ -56,8 +57,8 @@ class SensorConfigViewModel(
         ),
         SensorConfigItem(
             type = SensorType.GPS,
-            label = "GPS",
-            description = "Registra a posição geográfica ao longo do trajeto.",
+            labelRes = R.string.sensor_gps,
+            descriptionRes = R.string.sensor_gps_desc,
             isAvailable = sensorChecker.isAvailable(SensorType.GPS),
             isEnabled = config.gpsEnabled,
             frequencyHz = config.gpsHz,
@@ -65,8 +66,8 @@ class SensorConfigViewModel(
         ),
         SensorConfigItem(
             type = SensorType.MAGNETO,
-            label = "Magnetômetro",
-            description = "Mede o campo magnético ambiente ao longo dos 3 eixos (bússola e orientação).",
+            labelRes = R.string.sensor_magneto,
+            descriptionRes = R.string.sensor_magneto_desc,
             isAvailable = sensorChecker.isAvailable(SensorType.MAGNETO),
             isEnabled = config.magnetoEnabled,
             frequencyHz = config.magnetoHz,
@@ -74,8 +75,8 @@ class SensorConfigViewModel(
         ),
         SensorConfigItem(
             type = SensorType.CAMERA,
-            label = "Câmera",
-            description = "Tira fotos em intervalos regulares durante a inspeção para análise visual posterior.",
+            labelRes = R.string.sensor_camera,
+            descriptionRes = R.string.sensor_camera_desc,
             isAvailable = sensorChecker.isAvailable(SensorType.CAMERA),
             isEnabled = config.cameraEnabled,
             frequencyHz = (config.cameraIntervalSeconds * 10).toInt().coerceIn(5..100),

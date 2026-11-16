@@ -43,6 +43,8 @@ private const val MAX_SAMPLES = 300
 private const val TIMER_INTERVAL_MS = 50L
 private const val BATTERY_POLL_MS = 10_000L
 private const val TAG = "ActiveStartViewModel"
+private const val MIN_DISTANCE_DELTA_M = 1.5f
+private const val PREVIEW_GPS_INTERVAL_MS = 2000L
 
 class ActiveStartViewModel(
     private val sensorManager: SensorManager,
@@ -63,8 +65,9 @@ class ActiveStartViewModel(
     private var deviceId: String = ""
     private var activeConfig: AppConfig? = null
 
-    private val accelBuffer = ArrayDeque<FloatArray>(MAX_SAMPLES)
-    private val gyroBuffer  = ArrayDeque<FloatArray>(MAX_SAMPLES)
+    private val accelBuffer    = ArrayDeque<FloatArray>(MAX_SAMPLES)
+    private val gyroBuffer     = ArrayDeque<FloatArray>(MAX_SAMPLES)
+    private val magnetoBuffer  = ArrayDeque<FloatArray>(MAX_SAMPLES)
 
     private var imageCapture: ImageCapture? = null
     private val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -117,6 +120,7 @@ class ActiveStartViewModel(
             
             val startMs = System.currentTimeMillis()
             
+            val photosOn = hasCameraPermission && config.cameraEnabled
             _uiState.update {
                 it.copy(
                     sessionName = name,
@@ -128,13 +132,14 @@ class ActiveStartViewModel(
                     dataPoints = 0,
                     sessionStartMs = startMs,
                     totalSpeedSum = 0f,
-                    speedReadings = 0
+                    speedReadings = 0,
+                    photoCaptureActive = photosOn
                 )
             }
             csvWriter.openSession(name, config)
             startTimer()
             if (hasLocationPermission) requestLocation(config)
-            if (hasCameraPermission && config.cameraEnabled) startPhotoCapture(config)
+            if (photosOn) startPhotoCapture(config)
         }
     }
 
@@ -171,24 +176,22 @@ class ActiveStartViewModel(
     }
 
     fun pauseSession() {
-        _uiState.update { it.copy(status = StartStatus.PAUSED) }
+        _uiState.update { it.copy(status = StartStatus.PAUSED, photoCaptureActive = false) }
         timerJob?.cancel()
         photoJob?.cancel()
     }
 
     fun resumeSession() {
-        _uiState.update { it.copy(status = StartStatus.RUNNING) }
+        val config = activeConfig
+        val photosOn = config?.cameraEnabled == true && imageCapture != null
+        _uiState.update { it.copy(status = StartStatus.RUNNING, photoCaptureActive = photosOn) }
         startTimer()
-        activeConfig?.let { config ->
-            if (config.cameraEnabled) startPhotoCapture(config)
-        }
+        if (photosOn && config != null) startPhotoCapture(config)
     }
 
     fun stopSession() {
         timerJob?.cancel()
         photoJob?.cancel()
-        locationManager.removeUpdates(this)
-        lastLocation = null
 
         val state = _uiState.value
         if (state.sessionName.isNotEmpty()) {
@@ -213,26 +216,30 @@ class ActiveStartViewModel(
         }
         csvWriter.closeSession()
         activeConfig = null
-        
+
         registerSensors()
-        
+
+        // Mantém a última posição conhecida para o mapa não voltar a Brasília;
+        // reseta apenas métricas de sessão.
         _uiState.update {
             it.copy(
-                sessionName   = "",
-                status        = StartStatus.IDLE,
-                elapsedMs     = 0L,
-                distanceKm    = 0f,
-                speedKmh      = 0f,
-                maxSpeedKmh   = 0f,
-                dataPoints    = 0,
-                sessionStartMs = 0L,
-                totalSpeedSum = 0f,
-                speedReadings = 0,
-                lastLat       = null,
-                lastLng       = null,
-                locationTrail = emptyList()
+                sessionName        = "",
+                status             = StartStatus.IDLE,
+                elapsedMs          = 0L,
+                distanceKm         = 0f,
+                speedKmh           = 0f,
+                maxSpeedKmh        = 0f,
+                dataPoints         = 0,
+                sessionStartMs     = 0L,
+                totalSpeedSum      = 0f,
+                speedReadings      = 0,
+                locationTrail      = emptyList(),
+                photoCaptureActive = false
             )
         }
+
+        // Volta para modo preview (intervalo menor, mantém mapa vivo).
+        startPreviewLocationUpdates()
     }
 
     private fun startTimer() {
@@ -302,6 +309,7 @@ class ActiveStartViewModel(
                 }
             }
             Sensor.TYPE_MAGNETIC_FIELD -> {
+                pushSample(magnetoBuffer, sample) { copy(magnetoSamples = magnetoBuffer.toList()) }
                 if (isRecording && (activeConfig?.magnetoEnabled != false)) {
                     csvWriter.writeMagneto(ts, sample[0], sample[1], sample[2])
                 }
@@ -324,7 +332,7 @@ class ActiveStartViewModel(
     @SuppressLint("MissingPermission")
     private fun requestLocation(config: AppConfig? = null) {
         locationManager.removeUpdates(this)
-        
+
         val enabled = config?.gpsEnabled ?: true
         if (enabled && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             val interval = if (config != null) (1000 / config.gpsHz).toLong() else 1000L
@@ -332,27 +340,73 @@ class ActiveStartViewModel(
         }
     }
 
+    /**
+     * Inicia atualizações de localização em modo preview (antes de gravar).
+     * Usado quando a tela é aberta para mostrar o mapa centralizado no usuário
+     * mesmo sem sessão ativa. Chamado após a permissão ser concedida.
+     */
+    @SuppressLint("MissingPermission")
+    fun startPreviewLocationUpdates() {
+        if (_uiState.value.status != StartStatus.IDLE) return
+        locationManager.removeUpdates(this)
+
+        // Seed imediato com a última posição conhecida para o mapa não ficar em Brasília
+        val lastKnown = runCatching { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) }
+            .getOrNull()
+            ?: runCatching { locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) }.getOrNull()
+        if (lastKnown != null) {
+            _uiState.update {
+                it.copy(lastLat = lastKnown.latitude, lastLng = lastKnown.longitude)
+            }
+        }
+
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, PREVIEW_GPS_INTERVAL_MS, 0f, this
+            )
+        }
+        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            locationManager.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER, PREVIEW_GPS_INTERVAL_MS, 0f, this
+            )
+        }
+    }
+
     override fun onLocationChanged(location: Location) {
         val prev = lastLocation
-        val addedKm = if (prev != null) prev.distanceTo(location) / 1000f else 0f
-        lastLocation = location
-        val speedKmh = location.speed * 3.6f
-        val ts = System.currentTimeMillis()
+        val isRecording = _uiState.value.status == StartStatus.RUNNING
 
-        if (_uiState.value.status == StartStatus.RUNNING && (activeConfig?.gpsEnabled != false)) {
+        // Distância: acumula com piso mínimo para evitar drift do GPS parado.
+        val deltaM = if (prev != null) prev.distanceTo(location) else 0f
+        val addedKm = if (deltaM >= MIN_DISTANCE_DELTA_M) deltaM / 1000f else 0f
+
+        // Velocidade: prefere a reportada pelo GPS; se não vier, deriva do delta.
+        val speedMs = when {
+            location.hasSpeed() && location.speed > 0f -> location.speed
+            prev != null -> {
+                val dtS = (location.time - prev.time) / 1000f
+                if (dtS > 0f && deltaM >= MIN_DISTANCE_DELTA_M) deltaM / dtS else 0f
+            }
+            else -> 0f
+        }
+        val speedKmh = speedMs * 3.6f
+
+        lastLocation = location
+        val ts = System.currentTimeMillis()
+        if (isRecording && (activeConfig?.gpsEnabled != false)) {
             csvWriter.writeGps(ts, location.latitude, location.longitude, speedKmh)
         }
 
         _uiState.update {
-            val newTrail = if (it.status == StartStatus.RUNNING)
+            val newTrail = if (isRecording)
                 it.locationTrail + Pair(location.latitude, location.longitude)
             else it.locationTrail
             it.copy(
                 distanceKm    = it.distanceKm + addedKm,
                 speedKmh      = speedKmh,
                 maxSpeedKmh   = maxOf(it.maxSpeedKmh, speedKmh),
-                totalSpeedSum = it.totalSpeedSum + speedKmh,
-                speedReadings = it.speedReadings + 1,
+                totalSpeedSum = if (isRecording) it.totalSpeedSum + speedKmh else it.totalSpeedSum,
+                speedReadings = if (isRecording) it.speedReadings + 1 else it.speedReadings,
                 lastLat       = location.latitude,
                 lastLng       = location.longitude,
                 locationTrail = newTrail

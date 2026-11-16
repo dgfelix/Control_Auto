@@ -26,8 +26,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import br.com.sensorauto.R
 import br.com.sensorauto.ui.components.OutlineButton
 import br.com.sensorauto.ui.components.PrimaryButton
 import br.com.sensorauto.ui.components.SectionCard
@@ -56,14 +58,15 @@ fun SensorConfigScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Configuração de Sensores",
+                text = stringResource(R.string.sensors_title),
                 style = MaterialTheme.typography.headlineSmall
             )
 
+            val savedMsg = stringResource(R.string.toast_sensors_saved)
             state.sensors.forEach { item ->
-                SectionCard(title = item.label, content = {
+                SectionCard(title = stringResource(item.labelRes), content = {
                     Text(
-                        text = item.description,
+                        text = stringResource(item.descriptionRes),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -104,15 +107,15 @@ fun SensorConfigScreen(
             }
 
             OutlineButton(
-                text = "Calibrar Nível",
+                text = stringResource(R.string.action_calibrate_level),
                 onClick = onNavigateToBubbleLevel
             )
 
             PrimaryButton(
-                text = "Salvar",
+                text = stringResource(R.string.action_save),
                 onClick = {
                     viewModel.save {
-                        scope.launch { snackbarHostState.showSnackbar("Configurações salvas com sucesso") }
+                        scope.launch { snackbarHostState.showSnackbar(savedMsg) }
                     }
                 },
                 enabled = !state.isSaving
@@ -136,7 +139,7 @@ private fun CameraIntervalSlider(value: Int, onValueChange: (Int) -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Intervalo entre fotos",
+                text = stringResource(R.string.camera_interval_label),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -171,7 +174,8 @@ private fun AvailabilityBadge(available: Boolean) {
         shape = MaterialTheme.shapes.large
     ) {
         Text(
-            text = if (available) "Disponível" else "Indisponível",
+            text = if (available) stringResource(R.string.sensor_available)
+            else stringResource(R.string.sensor_unavailable),
             color = if (available) GreenSuccess else RedAlert,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
