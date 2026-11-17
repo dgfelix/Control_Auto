@@ -75,12 +75,25 @@ class ActiveStartViewModel(
     init {
         registerSensors()
         startBatteryPolling()
+        reloadConfig()
+    }
+
+    /** Carrega a config atual e reflete os flags de enabled no state. */
+    fun reloadConfig() {
         viewModelScope.launch {
             val config = configRepository.load()
             deviceId = if (config.deviceBrand.isEmpty()) {
                 "${Build.MANUFACTURER} ${Build.MODEL}".trim()
             } else {
                 "${config.deviceBrand} ${config.deviceModel}".trim()
+            }
+            _uiState.update {
+                it.copy(
+                    accelEnabled = config.accelEnabled,
+                    gyroEnabled = config.gyroEnabled,
+                    magnetoEnabled = config.magnetoEnabled,
+                    gpsEnabled = config.gpsEnabled
+                )
             }
         }
     }

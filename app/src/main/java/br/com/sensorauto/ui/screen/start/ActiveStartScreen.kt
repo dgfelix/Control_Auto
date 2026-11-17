@@ -99,6 +99,8 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
     }
 
     LaunchedEffect(Unit) {
+        viewModel.reloadConfig()
+
         val hasCameraPermission = ContextCompat.checkSelfPermission(
             context, Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
@@ -143,6 +145,10 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        if (state.status == StartStatus.RUNNING || state.status == StartStatus.PAUSED) {
+            SessionActiveTag(status = state.status)
+        }
+
         Surface(
             shape = MaterialTheme.shapes.large,
             tonalElevation = 1.dp,
@@ -253,7 +259,8 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                     yRange = -20f..20f,
                     axisLabels = listOf("X", "Y", "Z"),
                     axisValues = lastAccel?.toList(),
-                    axisUnit = stringResource(R.string.unit_ms2)
+                    axisUnit = stringResource(R.string.unit_ms2),
+                    enabled = state.accelEnabled
                 )
 
                 HorizontalDivider()
@@ -274,7 +281,8 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                         stringResource(R.string.axis_yaw)
                     ),
                     axisValues = lastGyro?.toList(),
-                    axisUnit = stringResource(R.string.unit_rads)
+                    axisUnit = stringResource(R.string.unit_rads),
+                    enabled = state.gyroEnabled
                 )
 
                 HorizontalDivider()
@@ -291,7 +299,8 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                     yRange = -100f..100f,
                     axisLabels = listOf("X", "Y", "Z"),
                     axisValues = lastMagneto?.toList(),
-                    axisUnit = stringResource(R.string.unit_ut)
+                    axisUnit = stringResource(R.string.unit_ut),
+                    enabled = state.magnetoEnabled
                 )
             }
         }
@@ -327,7 +336,8 @@ fun ActiveStartScreen(viewModel: ActiveStartViewModel = koinViewModel()) {
                     trail = state.locationTrail,
                     lastLat = state.lastLat,
                     lastLng = state.lastLng,
-                    distanceKm = state.distanceKm
+                    distanceKm = state.distanceKm,
+                    enabled = state.gpsEnabled
                 )
             }
         }
@@ -509,7 +519,8 @@ private fun TrailMap(
     trail: List<Pair<Double, Double>>,
     lastLat: Double?,
     lastLng: Double?,
-    distanceKm: Float
+    distanceKm: Float,
+    enabled: Boolean = true
 ) {
     val defaultPosition = LatLng(-15.78, -47.93) // Brasília como fallback
     val closeZoom = 18f
@@ -558,7 +569,7 @@ private fun TrailMap(
                 .align(Alignment.TopEnd)
                 .padding(10.dp),
             shape = MaterialTheme.shapes.large,
-            color = Color(0xFFF5A623).copy(alpha = 0.92f),
+            color = (if (enabled) Color(0xFFF5A623) else Color.Gray).copy(alpha = 0.92f),
             shadowElevation = 2.dp
         ) {
             Row(
@@ -579,6 +590,59 @@ private fun TrailMap(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+
+        if (!enabled) {
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.Gray.copy(alpha = 0.55f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.large,
+                    color = Color.Gray.copy(alpha = 0.95f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.sensor_gps_disabled),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionActiveTag(status: StartStatus) {
+    val isRunning = status == StartStatus.RUNNING
+    val bg = if (isRunning) Color(0xFF27AE60) else Color(0xFFF5A623)
+    val label = if (isRunning) stringResource(R.string.session_active_running)
+    else stringResource(R.string.session_active_paused)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = bg.copy(alpha = 0.15f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(bg, androidx.compose.foundation.shape.CircleShape)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = label,
+                color = bg,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

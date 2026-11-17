@@ -47,8 +47,12 @@ fun SensorChart(
     yRange: ClosedFloatingPointRange<Float>? = null,
     axisLabels: List<String> = emptyList(),
     axisValues: List<Float>? = null,
-    axisUnit: String = ""
+    axisUnit: String = "",
+    enabled: Boolean = true
 ) {
+    val disabledTone = Color.Gray
+    val effectiveColors = if (enabled) seriesColors else seriesColors.map { disabledTone }
+    val effectiveValues = if (enabled) axisValues else null
     Column(modifier = modifier) {
         // Header — título + ícone
         Row(
@@ -71,6 +75,20 @@ fun SensorChart(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
+            if (!enabled) {
+                Surface(
+                    shape = MaterialTheme.shapes.large,
+                    color = disabledTone.copy(alpha = 0.18f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.sensor_disabled).uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = disabledTone,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
         }
 
         // Linha de valores por eixo
@@ -82,8 +100,8 @@ fun SensorChart(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 axisLabels.forEachIndexed { i, label ->
-                    val color = seriesColors.getOrElse(i) { Color.Gray }
-                    val value = axisValues?.getOrNull(i)
+                    val color = effectiveColors.getOrElse(i) { Color.Gray }
+                    val value = effectiveValues?.getOrNull(i)
                     AxisChip(label = label, value = value, unit = axisUnit, color = color)
                 }
             }
@@ -120,8 +138,9 @@ fun SensorChart(
 
                 // Cada série
                 series.forEachIndexed { seriesIdx, samples ->
+                    if (!enabled) return@forEachIndexed
                     if (samples.size < 2) return@forEachIndexed
-                    val color = seriesColors.getOrElse(seriesIdx) { Color.Gray }
+                    val color = effectiveColors.getOrElse(seriesIdx) { Color.Gray }
 
                     val min: Float
                     val max: Float

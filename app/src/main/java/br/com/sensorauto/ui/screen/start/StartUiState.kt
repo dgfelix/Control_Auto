@@ -18,5 +18,9 @@ data class StartUiState(
     val lastLat: Double? = null,
     val lastLng: Double? = null,
     val locationTrail: List<Pair<Double, Double>> = emptyList(),
-    val photoCaptureActive: Boolean = false
+    val photoCaptureActive: Boolean = false,
+    val accelEnabled: Boolean = true,
+    val gyroEnabled: Boolean = true,
+    val magnetoEnabled: Boolean = true,
+    val gpsEnabled: Boolean = true
 )

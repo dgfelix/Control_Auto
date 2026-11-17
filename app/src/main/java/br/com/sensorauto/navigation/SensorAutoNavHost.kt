@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.Sensors
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,7 +52,7 @@ fun SensorAutoNavHost() {
 
     val bottomItems = listOf(
         BottomNavItem(stringResource(R.string.nav_start),    Icons.Default.RadioButtonChecked, Screen.ActiveSession),
-        BottomNavItem(stringResource(R.string.nav_config),   Icons.Default.DirectionsCar,      Screen.EquipmentConfig),
+        BottomNavItem(stringResource(R.string.nav_config),   Icons.Default.Tune,               Screen.EquipmentConfig),
         BottomNavItem(stringResource(R.string.nav_sensors),  Icons.Default.Sensors,            Screen.SensorConfig),
         BottomNavItem(stringResource(R.string.nav_history),  Icons.Default.VideoLibrary,       Screen.RecordingFiles),
     )

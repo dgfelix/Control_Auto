@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Roadify Logger</string>
+    <string name="app_title">ROADIFY LOGGER</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_start">Iniciar</string>
+    <string name="nav_config">Ajustes</string>
+    <string name="nav_sensors">Sensores</string>
+    <string name="nav_history">Historial</string>
+
+    <!-- Common -->
+    <string name="action_save">Guardar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_rename">Renombrar</string>
+    <string name="action_back">Volver</string>
+    <string name="action_share_all">Compartir todo</string>
+    <string name="common_dash">—</string>
+
+    <!-- Active session -->
+    <string name="active_session_id_label">ID DE LA SESIÓN</string>
+    <string name="active_elapsed_time_label">TIEMPO TRANSCURRIDO</string>
+    <string name="active_distance">Distancia</string>
+    <string name="active_speed">Velocidad</string>
+    <string name="active_accel">Acelerómetro</string>
+    <string name="active_battery">Batería</string>
+    <string name="active_chart_accel">Acelerómetro</string>
+    <string name="active_chart_gyro">Giroscopio</string>
+    <string name="active_chart_magneto">Magnetómetro</string>
+    <string name="active_trail_title">RECORRIDO</string>
+    <string name="active_photo_capture_on">Captura de fotos activa</string>
+    <string name="action_start_session">INICIAR SESIÓN</string>
+    <string name="action_pause">PAUSAR</string>
+    <string name="action_resume">REANUDAR</string>
+    <string name="action_stop">FINALIZAR</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_m">m</string>
+    <string name="unit_km">km</string>
+    <string name="unit_ms2">m/s²</string>
+    <string name="unit_rads">rad/s</string>
+    <string name="unit_ut">µT</string>
+    <string name="axis_roll">Roll</string>
+    <string name="axis_pitch">Pitch</string>
+    <string name="axis_yaw">Yaw</string>
+
+    <!-- Equipment / Configuration -->
+    <string name="config_title">Ajustes de Captura</string>
+    <string name="config_subtitle">Define los parámetros de telemetría antes de iniciar la sesión.</string>
+    <string name="config_section_vehicle">Vehículo y Soporte</string>
+    <string name="config_section_device">Dispositivo Móvil</string>
+    <string name="config_section_appearance">Apariencia</string>
+    <string name="config_section_language">Idioma</string>
+    <string name="field_brand">Marca</string>
+    <string name="field_model">Modelo</string>
+    <string name="field_year">Año</string>
+    <string name="field_engine">Motor</string>
+    <string name="field_gear">Transmisión</string>
+    <string name="field_motor">Motor</string>
+    <string name="gear_manual">Manual</string>
+    <string name="gear_auto">Auto</string>
+    <string name="motor_combustion">Comb.</string>
+    <string name="motor_electric">Eléct.</string>
+    <string name="mount_orientation">Orientación del Soporte</string>
+    <string name="orientation_vertical">Vertical</string>
+    <string name="orientation_horizontal">Horizontal</string>
+    <string name="action_auto_detect">Auto-Detectar</string>
+    <string name="appearance_follow_system">Seguir tema del sistema</string>
+    <string name="appearance_follow_system_on">Tema del sistema activo</string>
+    <string name="appearance_follow_system_off">Tema del sistema desactivado</string>
+    <string name="appearance_dark_theme">Tema oscuro</string>
+    <string name="appearance_dark_on">Tema oscuro activo</string>
+    <string name="appearance_dark_off">Tema claro activo</string>
+    <string name="appearance_auto">Automático: siguiendo el sistema</string>
+    <string name="appearance_auto_saved">La apariencia se guarda automáticamente.</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_english">English</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_desc_pt">Aplicativo em Português</string>
+    <string name="language_desc_en">App in English</string>
+    <string name="language_desc_es">App en Español</string>
+    <string name="language_chip_pt">PT</string>
+    <string name="language_chip_en">EN</string>
+    <string name="language_chip_es">ES</string>
+
+    <!-- Sensors -->
+    <string name="sensors_title">Ajustes de Sensores</string>
+    <string name="sensor_accel">Acelerómetro</string>
+    <string name="sensor_accel_desc">Captura variaciones de fuerza en los 3 ejes. Esencial para calcular el IRI.</string>
+    <string name="sensor_gyro">Giroscopio</string>
+    <string name="sensor_gyro_desc">Mide rotación angular. Complementa el acelerómetro en la detección de inclinaciones.</string>
+    <string name="sensor_gps">GPS</string>
+    <string name="sensor_gps_desc">Registra la posición geográfica a lo largo del recorrido.</string>
+    <string name="sensor_magneto">Magnetómetro</string>
+    <string name="sensor_magneto_desc">Mide el campo magnético ambiente en los 3 ejes (brújula y orientación).</string>
+    <string name="sensor_camera">Cámara</string>
+    <string name="sensor_camera_desc">Toma fotos a intervalos regulares durante la inspección para análisis visual posterior.</string>
+    <string name="sensor_available">Disponible</string>
+    <string name="sensor_unavailable">No disponible</string>
+    <string name="action_calibrate_level">Calibrar Nivel</string>
+    <string name="camera_interval_label">Intervalo entre fotos</string>
+    <string name="toast_sensors_saved">Ajustes guardados correctamente</string>
+
+    <!-- Bubble level -->
+    <string name="bubble_title">Nivel de Burbuja</string>
+    <string name="bubble_leveled">Dispositivo Nivelado</string>
+    <string name="bubble_adjust">Ajuste la inclinación</string>
+    <string name="bubble_axis_reading">Lectura de los Ejes</string>
+    <string name="bubble_pitch_h">Pitch (Horizontal)</string>
+    <string name="bubble_roll_l">Roll (Lateral)</string>
+    <string name="action_calibrate_zero">Calibrar / Reiniciar Nivel</string>
+
+    <!-- History -->
+    <string name="history_title">Lista de Grabaciones</string>
+    <string name="history_subtitle">Historial de todas las sesiones registradas.</string>
+    <string name="history_loading">Cargando…</string>
+    <string name="history_empty_title">No se encontraron grabaciones</string>
+    <string name="history_empty_subtitle">Inicie una sesión para registrar datos.</string>
+    <string name="history_stat_distance">Distancia</string>
+    <string name="history_stat_duration">Duración</string>
+    <string name="history_stat_avg_speed">Vel. Media</string>
+    <string name="history_stat_max_speed">Vel. Máx.</string>
+    <string name="history_stat_samples">Muestras</string>
+    <string name="history_stat_device">Dispositivo</string>
+    <string name="history_view_files">VER ARCHIVOS DE LA GRABACIÓN</string>
+    <string name="history_delete_title">¿Eliminar grabación?</string>
+    <string name="history_delete_message">\"%1$s\" se eliminará permanentemente.</string>
+    <string name="history_rename_title">Renombrar sesión</string>
+    <string name="history_rename_field">Nombre de la sesión</string>
+
+    <!-- Detail -->
+    <string name="detail_subtitle">Detalles de la grabación</string>
+    <string name="detail_summary">RESUMEN</string>
+    <string name="detail_files_title">ARCHIVOS DE LA SESIÓN</string>
+    <string name="detail_no_files">No se encontraron archivos para esta sesión.</string>
+    <string name="detail_start">Inicio</string>
+    <string name="detail_end">Fin</string>
+    <string name="file_photos">Fotos</string>
+
+    <!-- Chart axis -->
+    <string name="chart_axis_now">Ahora</string>
+
+    <!-- Disabled states -->
+    <string name="sensor_disabled">Desactivado</string>
+    <string name="sensor_gps_disabled">GPS desactivado</string>
+
+    <!-- Session tag -->
+    <string name="session_active_running">SESIÓN EN CURSO</string>
+    <string name="session_active_paused">SESIÓN PAUSADA</string>
+</resources>

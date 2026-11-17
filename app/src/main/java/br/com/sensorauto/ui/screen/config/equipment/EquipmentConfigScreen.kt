@@ -220,30 +220,41 @@ fun EquipmentConfigScreen(
         )
 
         SectionCard(title = stringResource(R.string.config_section_language)) {
-            val isEnglish = locale.languageTag.startsWith("en")
+            val tag = locale.languageTag
+            val current = when {
+                tag.startsWith("en") -> "en"
+                tag.startsWith("es") -> "es"
+                else -> "pt-BR"
+            }
+            val options = listOf(
+                Triple("pt-BR", stringResource(R.string.language_chip_pt), stringResource(R.string.language_portuguese)),
+                Triple("en",    stringResource(R.string.language_chip_en), stringResource(R.string.language_english)),
+                Triple("es",    stringResource(R.string.language_chip_es), stringResource(R.string.language_spanish))
+            )
             Row(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
-                    value = isEnglish,
-                    role = Role.Switch,
-                    onValueChange = { on -> locale.update(if (on) "en" else "pt-BR") }
-                ).padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        if (isEnglish) stringResource(R.string.language_english)
-                        else stringResource(R.string.language_portuguese),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        if (isEnglish) stringResource(R.string.language_desc_en)
-                        else stringResource(R.string.language_desc_pt),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                options.forEach { (code, chip, label) ->
+                    LanguageOption(
+                        code = chip,
+                        label = label,
+                        selected = current == code,
+                        onClick = { locale.update(code) },
+                        modifier = Modifier.weight(1f)
                     )
                 }
-                Switch(checked = isEnglish, onCheckedChange = null)
             }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = when (current) {
+                    "en" -> stringResource(R.string.language_desc_en)
+                    "es" -> stringResource(R.string.language_desc_es)
+                    else -> stringResource(R.string.language_desc_pt)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         SectionCard(title = stringResource(R.string.config_section_appearance)) {
@@ -316,6 +327,50 @@ fun EquipmentConfigScreen(
         }
 
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun LanguageOption(
+    code: String,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val borderWidth = if (selected) 2.dp else 1.dp
+    val borderColor = if (selected) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+    val bgColor = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+    val contentColor = if (selected) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.onSurface
+
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(64.dp),
+        shape = MaterialTheme.shapes.small,
+        color = bgColor,
+        border = BorderStroke(borderWidth, borderColor)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = code,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = contentColor
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor.copy(alpha = 0.8f),
+                maxLines = 1
+            )
+        }
     }
 }
 

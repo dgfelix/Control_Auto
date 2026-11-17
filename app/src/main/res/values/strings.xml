@@ -135,4 +135,19 @@
 
     <!-- Chart axis -->
     <string name="chart_axis_now">Agora</string>
+
+    <!-- Disabled states -->
+    <string name="sensor_disabled">Desativado</string>
+    <string name="sensor_gps_disabled">GPS desativado</string>
+
+    <!-- Session tag -->
+    <string name="session_active_running">SESSÃO EM ANDAMENTO</string>
+    <string name="session_active_paused">SESSÃO PAUSADA</string>
+
+    <!-- Language selector -->
+    <string name="language_spanish">Español</string>
+    <string name="language_desc_es">App en Español</string>
+    <string name="language_chip_pt">PT</string>
+    <string name="language_chip_en">EN</string>
+    <string name="language_chip_es">ES</string>
 </resources>
