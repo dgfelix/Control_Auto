@@ -11,7 +11,7 @@ import br.com.sensorauto.domain.repository.ConfigRepository
 
 class ConfigRepositoryImpl(
     private val dao: ConfigDao,
-    private val csvManager: ConfigCsvManager,
+    private val csvManager: ConfigCsvManager
 ) : ConfigRepository {
 
     override suspend fun load(): AppConfig {
@@ -44,9 +44,7 @@ class ConfigRepositoryImpl(
         cameraIntervalSeconds = cameraIntervalSeconds,
         segmentMeters = segmentMeters,
         magnetoEnabled = magnetoEnabled,
-        magnetoHz = magnetoHz,
-        offsetPitch = offsetPitch,
-        offsetRoll = offsetRoll,
+        magnetoHz = magnetoHz
     )
 
     private fun AppConfig.toEntity() = ConfigEntity(
@@ -71,8 +69,6 @@ class ConfigRepositoryImpl(
         cameraIntervalSeconds = cameraIntervalSeconds,
         segmentMeters = segmentMeters,
         magnetoEnabled = magnetoEnabled,
-        magnetoHz = magnetoHz,
-        offsetPitch = offsetPitch,
-        offsetRoll = offsetRoll,
+        magnetoHz = magnetoHz
     )
 }
