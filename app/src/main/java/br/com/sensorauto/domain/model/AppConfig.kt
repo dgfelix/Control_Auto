@@ -21,5 +21,7 @@ data class AppConfig(
     val cameraIntervalSeconds: Float = 2.0f,
     val segmentMeters: Int = 10,
     val magnetoEnabled: Boolean = true,
-    val magnetoHz: Int = 50
+    val magnetoHz: Int = 50,
+    val offsetPitch: Float = 0f,
+    val offsetRoll: Float = 0f,
 )

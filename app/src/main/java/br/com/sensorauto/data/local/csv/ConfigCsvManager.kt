@@ -16,7 +16,7 @@ class ConfigCsvManager(private val context: Context) {
             "gearType,motorType,deviceBrand,deviceModel,deviceYear," +
             "mountOrientation,accelEnabled,accelHz,gyroEnabled,gyroHz," +
             "gpsEnabled,gpsHz,cameraEnabled,cameraIntervalSeconds,segmentMeters," +
-            "magnetoEnabled,magnetoHz"
+            "magnetoEnabled,magnetoHz,offsetPitch,offsetRoll"
 
     fun save(config: AppConfig) {
         configFile.bufferedWriter().use { writer ->
@@ -43,7 +43,8 @@ class ConfigCsvManager(private val context: Context) {
         gyroEnabled.toString(), gyroHz.toString(),
         gpsEnabled.toString(), gpsHz.toString(),
         cameraEnabled.toString(), cameraIntervalSeconds.toString(), segmentMeters.toString(),
-        magnetoEnabled.toString(), magnetoHz.toString()
+        magnetoEnabled.toString(), magnetoHz.toString(),
+        offsetPitch.toString(), offsetRoll.toString(),
     ).joinToString(",")
 
     private fun parseCsvRow(row: String): AppConfig {
@@ -70,7 +71,9 @@ class ConfigCsvManager(private val context: Context) {
             cameraIntervalSeconds = if (parts.size > 17) parts[17].toFloatOrNull() ?: 2.0f else 2.0f,
             segmentMeters = if (parts.size > 18) parts[18].toIntOrNull() ?: 10 else 10,
             magnetoEnabled = if (parts.size > 19) parts[19].toBoolean() else true,
-            magnetoHz = if (parts.size > 20) parts[20].toIntOrNull() ?: 50 else 50
+            magnetoHz = if (parts.size > 20) parts[20].toIntOrNull() ?: 50 else 50,
+            offsetPitch = if (parts.size > 21) parts[21].toFloatOrNull() ?: 0f else 0f,
+            offsetRoll = if (parts.size > 22) parts[22].toFloatOrNull() ?: 0f else 0f,
         )
     }
 
