@@ -4,6 +4,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.view.Surface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.sensorauto.domain.model.Orientation
@@ -19,13 +20,14 @@ import kotlin.math.abs
 class BubbleLevelViewModel(
     private val sensorManager: SensorManager,
     private val configRepository: ConfigRepository,
-    private val computeOrientation: ComputeOrientationUseCase
+    private val computeOrientation: ComputeOrientationUseCase,
 ) : ViewModel(), SensorEventListener {
 
     private val _uiState = MutableStateFlow(BubbleLevelUiState())
     val uiState: StateFlow<BubbleLevelUiState> = _uiState.asStateFlow()
 
     private var mountOrientation = Orientation.VERTICAL
+    private var displayRotation = Surface.ROTATION_0
     private var rawPitch = 0f
     private var rawRoll = 0f
 
@@ -33,8 +35,18 @@ class BubbleLevelViewModel(
         viewModelScope.launch {
             val config = configRepository.load()
             mountOrientation = config.mountOrientation
+            _uiState.update {
+                it.copy(
+                    offsetPitch = config.offsetPitch,
+                    offsetRoll = config.offsetRoll,
+                )
+            }
         }
         registerSensor()
+    }
+
+    fun updateDisplayRotation(rotation: Int) {
+        displayRotation = rotation
     }
 
     private fun registerSensor() {
@@ -49,20 +61,20 @@ class BubbleLevelViewModel(
             val y = event.values[1]
             val z = event.values[2]
 
-            val (pitch, roll) = computeOrientation(x, y, z, mountOrientation)
+            val (pitch, roll) = computeOrientation(x, y, z, mountOrientation, displayRotation)
             rawPitch = pitch
             rawRoll = roll
 
             val state = _uiState.value
             val adjustedPitch = pitch - state.offsetPitch
             val adjustedRoll = roll - state.offsetRoll
-            val isLevel = abs(adjustedPitch) <= state.toleranceDeg && abs(adjustedRoll) <= state.toleranceDeg
+            val isLevel = (abs(adjustedPitch) <= state.toleranceDeg) && (abs(adjustedRoll) <= state.toleranceDeg)
 
             _uiState.update {
                 it.copy(
                     pitchDeg = adjustedPitch,
                     rollDeg = adjustedRoll,
-                    isLevel = isLevel
+                    isLevel = isLevel,
                 )
             }
         }
@@ -71,14 +83,26 @@ class BubbleLevelViewModel(
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
 
     fun calibrate() {
+        val currentPitch = rawPitch
+        val currentRoll = rawRoll
+
         _uiState.update {
             it.copy(
-                offsetPitch = rawPitch,
-                offsetRoll = rawRoll,
+                offsetPitch = currentPitch,
+                offsetRoll = currentRoll,
                 pitchDeg = 0f,
                 rollDeg = 0f,
-                isLevel = true
+                isLevel = true,
             )
+        }
+
+        viewModelScope.launch {
+            val currentConfig = configRepository.load()
+            val updatedConfig = currentConfig.copy(
+                offsetPitch = currentPitch,
+                offsetRoll = currentRoll,
+            )
+            configRepository.save(updatedConfig)
         }
     }
 
